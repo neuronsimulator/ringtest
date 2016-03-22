@@ -1,0 +1,6 @@
+
+nrniv -python ringtest.py # one thread
+mpiexec -n 4 nrniv -mpi -python ringtest.py # 4 threads
+
+nrngui spkplt.hoc #plots out.std
+

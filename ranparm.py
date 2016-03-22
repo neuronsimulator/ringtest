@@ -3,7 +3,7 @@
 from neuron import h
 pc = h.ParallelContext()
 
-def cellran(gid):
+def cellran(gid, nclist):
   r = h.Random()
   r.Random123(gid)
   r.uniform(1.0, 1.1)
@@ -39,11 +39,10 @@ def cellran(gid):
           p.__setattr__(varname[0], x * r.repick())
           #print varname[0], p.__getattribute__(varname[0])
   
-  return
   #netcons targeting the cell
-  nclist = h.cvode.netconlist("", cell, "")
   for nc in nclist:
-    nc.weight[0] *= r.repick()
-    nc.delay *= r.repick()
+    if nc.postcell() == cell:
+      nc.weight[0] *= r.repick()
+      nc.delay *= r.repick()
 
 

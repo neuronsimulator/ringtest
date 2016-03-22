@@ -16,6 +16,7 @@ class Ring(object):
 
   def __init__(self, ncell, ncompart, gidstart):
     #print "construct ", self
+    self.gids = []
     self.delay = 1
     self.ncell = int(ncell)
     self.gidstart = gidstart
@@ -31,6 +32,7 @@ class Ring(object):
     self.cells = []
     for i in range(rank, ncell, nhost):
       gid = i + self.gidstart
+      self.gids.append(gid)
       cell = h.B_BallStick()
       cell.dend.nseg = ncompart
       self.cells.append(cell)
@@ -61,9 +63,10 @@ class Ring(object):
     self.stim = h.NetStim()
     self.stim.number = 1
     self.stim.start = 0
-    self.ncstim = h.NetCon(self.stim, pc.gid2cell(self.gidstart).synlist[0])
-    self.ncstim.delay = 0
-    self.ncstim.weight[0] = 0.01
+    ncstim = h.NetCon(self.stim, pc.gid2cell(self.gidstart).synlist[0])
+    ncstim.delay = 0
+    ncstim.weight[0] = 0.01
+    self.nclist.append(ncstim)
 
 
 def spike_record():
@@ -103,9 +106,10 @@ if __name__ == '__main__':
   timeit("created rings")
   if randomize_parameters:
     from ranparm import cellran
-    for i in range(nring*ncell):
-     if pc.gid_exists(i):
-       cellran(i)
+    for ring in rings:
+      for gid in ring.gids:
+        if pc.gid_exists(gid):
+          cellran(gid, ring.nclist)
     timeit("randomized parameters")
   h.cvode.cache_efficient(1)
   ns = 0
