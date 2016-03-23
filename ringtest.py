@@ -1,7 +1,7 @@
-nring=10
-ncell=10 # number of cells per ring
+nring=1
+ncell=100 # number of cells per ring
 nbranch=[1,1] # min, max random number of dend sections (random tree topology)
-ncompart=[10, 10] # min, max random nseg for each branch
+ncompart=[1000, 1000] # min, max random nseg for each branch
 ntype=1 # max number of distinct cell types (same branching and compartments)
   #each cell has random type [0:ntype]
 
@@ -137,7 +137,6 @@ if __name__ == '__main__':
     ns += sec.nseg
   print "%d non-zero area compartments"%ns
   #h.topology()
-  h.quit()
   spike_record()
   pc.set_maxstep(10)
   h.stdinit()
