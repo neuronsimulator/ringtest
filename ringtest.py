@@ -1,8 +1,12 @@
-nring=100
-ncell=10
-ncompart=10
-tstop=100
-randomize_parameters = True
+nring=10
+ncell=10 # number of cells per ring
+nbranch=[1,1] # min, max random number of dend sections (random tree topology)
+ncompart=[10, 10] # min, max random nseg for each branch
+ntype=1 # max number of distinct cell types (same branching and compartments)
+  #each cell has random type [0:ntype]
+
+tstop=1
+randomize_parameters = False
 
 from neuron import h
 h.load_file('nrngui.hoc')
@@ -12,29 +16,45 @@ nhost = int(pc.nhost())
 #from cell import BallStick
 h.load_file("cell.hoc")
 
+def celltypeinfo(gid, nbranch, ncompart, ntype):
+  r = h.Random()
+  r.Random123(gid, 1)
+  type = int(r.discunif(0, ntype-1))
+  r.Random123(type, 2)
+  nb = int(r.discunif(nbranch[0], nbranch[1]))
+  secpar = h.Vector(nb)
+  segvec = h.Vector(nb)
+  r.discunif(ncompart[0], ncompart[1])
+  for i in range(nb):
+    segvec.x[i] = int(r.repick())
+  for i in range(1, nb):
+    secpar.x[i] = int(r.discunif(0, i-1))
+
+  return secpar, segvec
+
 class Ring(object):
 
-  def __init__(self, ncell, ncompart, gidstart):
+  def __init__(self, ncell, nbranch, ncompart, ntype, gidstart):
     #print "construct ", self
     self.gids = []
     self.delay = 1
     self.ncell = int(ncell)
     self.gidstart = gidstart
-    self.mkring(self.ncell, ncompart)
+    self.mkring(self.ncell, nbranch, ncompart, ntype)
     self.mkstim()
 
-  def mkring(self, ncell, ncompart):
-    self.mkcells(ncell, ncompart)
+  def mkring(self, ncell, nbranch, ncompart, ntype):
+    self.mkcells(ncell, nbranch, ncompart, ntype)
     self.connectcells(ncell)
 
-  def mkcells(self, ncell, ncompart):
+  def mkcells(self, ncell, nbranch, ncompart, ntype):
     global rank, nhost
     self.cells = []
-    for i in range(rank, ncell, nhost):
-      gid = i + self.gidstart
+    for i in range(rank + self.gidstart, ncell + self.gidstart, nhost):
+      gid = i
       self.gids.append(gid)
-      cell = h.B_BallStick()
-      cell.dend.nseg = ncompart
+      secpar, segvec = celltypeinfo(gid, nbranch, ncompart, ntype)
+      cell = h.B_BallStick(secpar, segvec)
       self.cells.append(cell)
       pc.set_gid2node(gid, rank)
       nc = cell.connect2target(None)
@@ -102,7 +122,7 @@ def timeit(message):
 
 if __name__ == '__main__':
   timeit(None)
-  rings = [Ring(ncell, ncompart, i*ncell) for i in range(nring)]
+  rings = [Ring(ncell, nbranch, ncompart, ntype, i*ncell) for i in range(nring)]
   timeit("created rings")
   if randomize_parameters:
     from ranparm import cellran
@@ -116,6 +136,8 @@ if __name__ == '__main__':
   for sec in h.allsec():
     ns += sec.nseg
   print "%d non-zero area compartments"%ns
+  #h.topology()
+  h.quit()
   spike_record()
   pc.set_maxstep(10)
   h.stdinit()
