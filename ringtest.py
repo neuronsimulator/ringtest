@@ -1,11 +1,11 @@
-nring=1
-ncell=100 # number of cells per ring
+nring=2
+ncell=10 # number of cells per ring
 nbranch=[1,1] # min, max random number of dend sections (random tree topology)
-ncompart=[1000, 1000] # min, max random nseg for each branch
+ncompart=[10, 10] # min, max random nseg for each branch
 ntype=1 # max number of distinct cell types (same branching and compartments)
   #each cell has random type [0:ntype]
 
-tstop=1
+tstop=100
 randomize_parameters = False
 
 from neuron import h

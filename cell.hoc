@@ -50,7 +50,7 @@ proc geom() { local i
   forsec all {  }
   soma {  /*area = 500 */ L = diam = 12.6157  }
   dend[0] {  L = 200  diam = 1  }
-  for i=1, nden { L = 10 diam = 1 }
+  for i=1, nden-1 dend[i] { L = 10 diam = 1 }
 }
 external lambda_f
 proc biophys() {
