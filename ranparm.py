@@ -1,4 +1,5 @@
 # proportionally randomize all range parameters, weights, delays ...
+# exception is HalfGap.g which must be symetric
 
 from neuron import h
 pc = h.ParallelContext()
@@ -31,6 +32,8 @@ def cellran(gid, nclist):
       for p in seg.point_processes():
         n = p.hname()
         n = n[:n.index('[')]
+        if n == 'HalfGap':
+          continue
         ms = h.MechanismStandard(n, 1)
         for i in range(int(ms.count())):
           varname = h.ref("")

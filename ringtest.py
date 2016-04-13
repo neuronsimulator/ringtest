@@ -1,9 +1,11 @@
-nring=2
+nring=1
 ncell=10 # number of cells per ring
 nbranch=[1,1] # min, max random number of dend sections (random tree topology)
 ncompart=[10, 10] # min, max random nseg for each branch
 ntype=1 # max number of distinct cell types (same branching and compartments)
   #each cell has random type [0:ntype]
+
+usegap = False
 
 tstop=100
 randomize_parameters = False
@@ -36,6 +38,10 @@ class Ring(object):
 
   def __init__(self, ncell, nbranch, ncompart, ntype, gidstart):
     #print "construct ", self
+    if usegap:
+      global nring
+      self.sid_dend_start = nring*ncell
+      self.halfgap_list = []
     self.gids = []
     self.delay = 1
     self.ncell = int(ncell)
@@ -67,14 +73,38 @@ class Ring(object):
     for i in range(ncell):
       gid = i + self.gidstart
       targid = (i+1)%ncell + self.gidstart
-      if pc.gid_exists(targid):
-        target = pc.gid2cell(targid)
-        syn = target.synlist[0]
-        nc = pc.gid_connect(gid, syn)
-        self.nclist.append(nc)
-        nc.delay = self.delay
-        nc.weight[0] = 0.01
+      if usegap:
+        self.mk_gap(gid, targid)
+      else:
+        self.mk_con(gid, targid)
 
+  def mk_con(self, gid, targid):
+    if pc.gid_exists(targid):
+      target = pc.gid2cell(targid)
+      syn = target.synlist[0]
+      nc = pc.gid_connect(gid, syn)
+      self.nclist.append(nc)
+      nc.delay = self.delay
+      nc.weight[0] = 0.01
+
+  def mk_gap(self, gid_soma, gid_dend):
+    #gap between soma and dend
+    # soma voltages have sid = gid_soma
+    # dendrite voltages have sid = gid_dend + nring*ncell
+    sid_soma = gid_soma
+    sid_dend = gid_dend + self.sid_dend_start
+    if pc.gid_exists(gid_dend):
+      self.mk_halfgap(sid_dend, sid_soma, pc.gid2cell(gid_dend).dend[0](.5))
+    if pc.gid_exists(gid_soma):
+      self.mk_halfgap(sid_soma, sid_dend, pc.gid2cell(gid_soma).soma(.5))
+
+  def mk_halfgap(self, sid_tar, sid_src, seg):
+    # target exists
+    pc.source_var(seg._ref_v, sid_tar, sec=seg.sec)
+    hg = h.HalfGap(seg)
+    pc.target_var(hg, hg._ref_vgap, sid_src)
+    hg.g = 0.003 # do not randomize as must be same for other side of gap
+    self.halfgap_list.append(hg)
 
   #Instrumentation - stimulation and recording
   def mkstim(self):
@@ -138,6 +168,8 @@ if __name__ == '__main__':
   print "%d non-zero area compartments"%ns
   #h.topology()
   spike_record()
+  if usegap:
+    pc.setup_transfer()
   pc.set_maxstep(10)
   h.stdinit()
   timeit("initialized")
