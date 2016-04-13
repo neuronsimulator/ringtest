@@ -148,5 +148,6 @@ if __name__ == '__main__':
   spikeout()
   timeit("wrote %d spikes"%len(tvec))
 
-  pc.barrier()
-  h.quit()
+  if nhost > 1:
+    pc.barrier()
+    h.quit()
