@@ -1,9 +1,19 @@
-nring=1
-ncell=10 # number of cells per ring
-nbranch=[1,1] # min, max random number of dend sections (random tree topology)
-ncompart=[10, 10] # min, max random nseg for each branch
-ntype=1 # max number of distinct cell types (same branching and compartments)
-  #each cell has random type [0:ntype]
+nring=64
+ncell=8 # number of cells per ring
+ncell_per_type = 32
+
+nbranch=[20, 20] # min, max random number of dend sections (random tree topology)
+ncompart=[2, 2] # min, max random nseg for each branch
+
+# number of distinct cell types (same branching and compartments)
+#each cell has random type [0:ntype]
+ntype=(nring*ncell - 1)/ncell_per_type + 1
+#note that if branching is small and variation of nbranch and ncompart
+#  is small then not all types may have distinct topologies
+#  CoreNEURON will print number of distinct topologies.
+
+print "nring=%d\ncell per ring=%d\nncell_per_type=%d"%(nring, ncell, ncell_per_type)
+print "ntype=%d"%ntype
 
 usegap = False
 
@@ -18,10 +28,21 @@ nhost = int(pc.nhost())
 #from cell import BallStick
 h.load_file("cell.hoc")
 
+typecellcnt = [[i, 0] for i in range(ntype)]
+
 def celltypeinfo(gid, nbranch, ncompart, ntype):
+  global typecellcnt
   r = h.Random()
   r.Random123(gid, 1)
-  type = int(r.discunif(0, ntype-1))
+  # every type has exactly ncell_per_type
+  i = int(r.discunif(0, len(typecellcnt)-1))
+  type = typecellcnt[i][0];
+  typecellcnt[i][1] += 1
+  if typecellcnt[i][1] >= ncell_per_type:
+    typecellcnt.pop(i)
+
+  #print "gid=%d type=%d"%(gid, type)
+  
   r.Random123(type, 2)
   nb = int(r.discunif(nbranch[0], nbranch[1]))
   secpar = h.Vector(nb)
@@ -114,7 +135,7 @@ class Ring(object):
     self.stim.number = 1
     self.stim.start = 0
     ncstim = h.NetCon(self.stim, pc.gid2cell(self.gidstart).synlist[0])
-    ncstim.delay = 0
+    ncstim.delay = 1
     ncstim.weight[0] = 0.01
     self.nclist.append(ncstim)
 
@@ -153,6 +174,7 @@ def timeit(message):
 if __name__ == '__main__':
   timeit(None)
   rings = [Ring(ncell, nbranch, ncompart, ntype, i*ncell) for i in range(nring)]
+  print "typecellcnt [[type,cnt],...]", typecellcnt
   timeit("created rings")
   if randomize_parameters:
     from ranparm import cellran
