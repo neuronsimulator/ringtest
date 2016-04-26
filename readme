@@ -4,3 +4,10 @@ mpiexec -n 4 nrniv -mpi -python ringtest.py # 4 threads
 
 nrngui spkplt.hoc #plots out.std
 
+mod2c and coreneuron build from sandbox/kumbhar/dev
+origin	ssh://bbpcode.epfl.ch/sim/coreneuron
+coreneuron ...
+cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/bb/install -DENABLE_OPENACC=OFF
+export PATH=$HOME/bb/install/bin:$PATH
+export LD_LIBRARY_PATH=$HOME/bb/install/lib
+coreneuron_exec -d dat --celsius=6.3 --tstop=100 --cell_permute
