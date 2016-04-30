@@ -1,0 +1,96 @@
+begintemplate B_BallStick
+public is_art
+public init, topol, basic_shape, subsets, geom, biophys, geom_nseg, biophys_inhomo
+public synlist, x, y, z, position, connect2target
+
+public soma, dend
+public all, den
+
+create soma, dend[1]
+
+objref synlist
+
+proc init() {
+  nden = $1
+  nsomachild = $2
+  topol()
+    
+  subsets()
+  geom()
+  biophys()
+  synlist = new List()
+  synapses()
+  x = y = z = 0 // only change via position
+}
+
+
+proc topol() { local i
+  nden_per_branch = nden/nsomachild
+  create dend[nden]
+  for i=0, nden-1 {
+    if ((i%nden_per_branch) == 0) {
+      connect dend[i](0), soma(1)
+    }else{
+      connect dend[i](0), dend[i-1](1)
+    }
+  }
+}
+
+objref all, den
+proc subsets() { local i
+  objref all, den
+  all = new SectionList()
+    forall all.append()
+  den = new SectionList()
+    for i=0, nden-1 dend[i] { den.append() }
+
+}
+proc geom() { local i
+  forsec all {  }
+  soma {  /*area = 500 */ L = diam = 12.6157  }
+  dend[0] {  L = 10  diam = 1  }
+  for i=1, nden-1 dend[i] { L = 10 diam = 1 }
+}
+external lambda_f
+proc biophys() {
+  forsec all {
+    Ra = 100
+    cm = 1
+  }
+  soma {
+    insert hh
+      gnabar_hh = 0.12
+      gkbar_hh = 0.036
+      gl_hh = 0.0003
+      el_hh = -54.3
+  }
+  forsec den {
+    insert pas
+      g_pas = 0.001
+      e_pas = -65
+  }
+}
+proc biophys_inhomo(){}
+proc position() { local i
+  soma for i = 0, n3d()-1 {
+    pt3dchange(i, $1-x+x3d(i), $2-y+y3d(i), $3-z+z3d(i), diam3d(i))
+  }
+  x = $1  y = $2  z = $3
+}
+obfunc connect2target() { localobj nc //$o1 target point process, optional $o2 returned NetCon
+  soma nc = new NetCon(&v(1), $o1)
+  nc.threshold = 10
+  if (numarg() == 2) { $o2 = nc } // for backward compatibility
+  return nc
+}
+objref syn_
+proc synapses() {
+  /* E0 */   dend[0] syn_ = new ExpSyn(0.8)  synlist.append(syn_)
+    syn_.tau = 2
+  /* I1 */   dend[0] syn_ = new ExpSyn(0.1)  synlist.append(syn_)
+    syn_.tau = 5
+    syn_.e = -80
+}
+func is_art() { return 0 }
+
+endtemplate B_BallStick
