@@ -2,7 +2,7 @@ nring=64
 ncell=8 # number of cells per ring
 
 nsomachild = 16
-nbranch = 64 
+nbranch = 32
 
 print "nring=%d\ncell per ring=%d"%(nring, ncell)
 
