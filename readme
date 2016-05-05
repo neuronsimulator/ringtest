@@ -11,3 +11,45 @@ cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/bb/install -DENABLE_OPENACC=OFF
 export PATH=$HOME/bb/install/bin:$PATH
 export LD_LIBRARY_PATH=$HOME/bb/install/lib
 coreneuron_exec -d dat --celsius=6.3 --tstop=100 --cell_permute
+
+
+For vizcluster with GPU and PG compiler
+
+1. Allocate node on vizcluster (need to use perfengineering queue) which
+has PGI compiler license that I have installed:
+
+salloc --account=proj16 -N 1 -n 2 --time=06:00:00 -p perfengineering
+
+2. Remove all modules and use the PGI module that I have installed:
+
+module purge
+export MODULEPATH=/gpfs/bbp.cscs.ch/home/kumbhar/workarena/systems/lugviz/softwares/install/compilers/modulefiles/
+$MODULEPATH 
+module load PrgEnv-pgi/16.4
+
+3. Install mod2c
+
+I have forked sandbox/hines/pg-acc and made some modifications in: sandbox/kumbhar/pg-acc
+Build and install the mod2c sandbox/kumbhar/pg-acc branch using default
+compilers (gcc)
+
+4. Install CoreNeuron
+
+I forked sandbox/hines/pg-acc and made some modifications: sandbox/kumbhar/pg-acc
+Build this branch as:
+export CC=mpicc
+export CXX=mpicxx
+cmake .. -DCMAKE_C_FLAGS="-I/gpfs/bbp.cscs.ch/apps/viz/tools/pgi/15.10/linux86-64/2015
+include -acc -Minfo=acc -O3 -DSWAP_ENDIAN_DISABLE_ASM -DLAYOUT=0 -g -DDISABLE_HOC_EXP
+ -DCMAKE_CXX_FLAGS="-I/gpfs/bbp.cscs.ch/apps/viz/tools/pgi/15.10/linux86-64/2015
+include -acc -Minfo=acc -O3 -DSWAP_ENDIAN_DISABLE_ASM -DLAYOUT=0 -g -DDISABLE_HOC_EXP
+ -DCOMPILE_LIBRARY_TYPE=STATIC
+//make && make install
+
+Only error we will get is about celsius. Just add local variable in rates(
+ function of build/coreneuron/hh.c :
+double celsius = 6.3;
+
+There are two gpus on this node. So, if you set export CUDA_VISIBLE_DEVICES=0,
+all of your jobs will use 1st GPU and then I will use 2nd GPU.
+
