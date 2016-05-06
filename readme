@@ -18,13 +18,12 @@ For vizcluster with GPU and PG compiler
 1. Allocate node on vizcluster (need to use perfengineering queue) which
 has PGI compiler license that I have installed:
 
-salloc --account=proj16 -N 1 -n 2 --time=06:00:00 -p perfengineering
+salloc --account=proj16 -N 1 -n 2 --time=9:00:00 --nodelist=bbpviz036 -p interactive
 
 2. Remove all modules and use the PGI module that I have installed:
 
 module purge
-export MODULEPATH=/gpfs/bbp.cscs.ch/home/kumbhar/workarena/systems/lugviz/softwares/install/compilers/modulefiles/
-$MODULEPATH 
+export MODULEPATH=/gpfs/bbp.cscs.ch/home/kumbhar/workarena/systems/lugviz/softwares/install/compilers/modulefiles:$MODULEPATH 
 module load PrgEnv-pgi/16.4
 
 3. Install mod2c
@@ -39,17 +38,21 @@ I forked sandbox/hines/pg-acc and made some modifications: sandbox/kumbhar/pg-ac
 Build this branch as:
 export CC=mpicc
 export CXX=mpicxx
-cmake .. -DCMAKE_C_FLAGS="-I/gpfs/bbp.cscs.ch/apps/viz/tools/pgi/15.10/linux86-64/2015
-include -acc -Minfo=acc -O3 -DSWAP_ENDIAN_DISABLE_ASM -DLAYOUT=0 -g -DDISABLE_HOC_EXP
- -DCMAKE_CXX_FLAGS="-I/gpfs/bbp.cscs.ch/apps/viz/tools/pgi/15.10/linux86-64/2015
-include -acc -Minfo=acc -O3 -DSWAP_ENDIAN_DISABLE_ASM -DLAYOUT=0 -g -DDISABLE_HOC_EXP
- -DCOMPILE_LIBRARY_TYPE=STATIC
-//make && make install
 
-Only error we will get is about celsius. Just add local variable in rates(
- function of build/coreneuron/hh.c :
-double celsius = 6.3;
+cmake .. -DCMAKE_C_FLAGS="-I/gpfs/bbp.cscs.ch/apps/viz/tools/pgi/15.10/linux86-64/2015/include -acc -Minfo=acc -O3 -DSWAP_ENDIAN_DISABLE_ASM -DLAYOUT=0 -g -DDISABLE_HOC_EXP" -DCMAKE_CXX_FLAGS="-I/gpfs/bbp.cscs.ch/apps/viz/tools/pgi/15.10/linux86-64/2015/include -acc -Minfo=acc -O3 -DSWAP_ENDIAN_DISABLE_ASM -DLAYOUT=0 -g -DDISABLE_HOC_EXP"  -DCOMPILE_LIBRARY_TYPE=STATIC -DCMAKE_INSTALL_PREFIX=/gpfs/bbp.cscs.ch/home/hines/bbgpu/install_viz/
+
+//make && make install
 
 There are two gpus on this node. So, if you set export CUDA_VISIBLE_DEVICES=0,
 all of your jobs will use 1st GPU and then I will use 2nd GPU.
 
+export CUDA_VISIBLE_DEVICES=0
+
+export PGI_ACC_TIME=1 # print timeing
+export PGI_ACC_TIME=0 # disable timing
+export PGI_ACC_NOTIFY=1 # print kernel launch notifications at run time
+  # 2 means when data movement
+mpirun -n 1 coreneuron_exec -d tests/integration/ring -e 1 --gpu -r -mpi
+
+
+http://www.pgroup.com/doc/openacc_gs.pdf  page 36

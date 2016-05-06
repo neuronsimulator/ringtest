@@ -1,8 +1,8 @@
-nring=64
-ncell=8 # number of cells per ring
-ncell_per_type = 32
+nring=1
+ncell=8# number of cells per ring
+ncell_per_type = 2
 
-nbranch=[20, 20] # min, max random number of dend sections (random tree topology)
+nbranch=[30, 30] # min, max random number of dend sections (random tree topology)
 ncompart=[1, 1] # min, max random nseg for each branch
 
 # number of distinct cell types (same branching and compartments)
@@ -64,7 +64,7 @@ def celltypeinfo(gid, nbranch, ncompart, ntype):
     else:
      x.append([i, 0])
 
-  print type, secpar.to_python()
+  #print type, secpar.to_python()
   return secpar, segvec
 
 class Ring(object):
@@ -200,7 +200,7 @@ if __name__ == '__main__':
   for sec in h.allsec():
     ns += sec.nseg
   print "%d non-zero area compartments"%ns
-  h.topology()
+  #h.topology()
   spike_record()
   if usegap:
     pc.setup_transfer()
