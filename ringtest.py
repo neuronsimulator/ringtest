@@ -1,9 +1,26 @@
-nring=1
-ncell=8# number of cells per ring
-ncell_per_type = 2
+import argparse
+parser = argparse.ArgumentParser(prefix_chars='-r')
+parser.add_argument("-python", action='store_true')
+parser.add_argument("-mpi", action='store_true')
+parser.add_argument("-nring", metavar='N', help="number of rings (default 16)", type=int, default=16)
+parser.add_argument("-ncell", metavar='N', help="number of cells per ring (default 8)", type=int, default=8)
+parser.add_argument('-npt', metavar='N', help="number of cells per type (default 8)", type=int, default=8)
+parser.add_argument("-branch", metavar='[N,N]', help="range of branches per cell (default [10,20])", type=list, default=[10,20])
+parser.add_argument("-compart", metavar='[N,N]', help="range of compartments per branch (default [1,1])", type=list, default=[1,1])
+parser.add_argument("-tstop", metavar='float', help="stop time (ms) (default 100.0)", type=float, default=100.)
+parser.add_argument("-gran", metavar='N', help="global Random123 index (default 0)", type=int, default=0)
+parser.add_argument("-rparm", dest='rparm', action='store_true', help="randomize parameters", default=False)
+parser.add_argument("-show", action='store_true', help="show type topologies", default=False)
+parser.add_argument("-coredat", metavar='path', help="folder for bbcorewrite hashname folders (default coredat)", default='coredat')
+parser.add_argument("ringtest.py", action='store_true')
+args = parser.parse_args()
 
-nbranch=[30, 30] # min, max random number of dend sections (random tree topology)
-ncompart=[1, 1] # min, max random nseg for each branch
+nring=args.nring
+ncell=args.ncell# number of cells per ring
+ncell_per_type = args.npt
+
+nbranch=args.branch # min, max random number of dend sections (random tree topology)
+ncompart=args.compart # min, max random nseg for each branch
 
 # number of distinct cell types (same branching and compartments)
 #each cell has random type [0:ntype]
@@ -17,11 +34,14 @@ print "ntype=%d"%ntype
 
 usegap = False
 
-tstop=100
-randomize_parameters = False
+tstop=args.tstop
+randomize_parameters = args.rparm
 
 from neuron import h
-h.load_file('nrngui.hoc')
+
+h.Random().Random123_globalindex(args.gran)
+
+h.load_file('stdgui.hoc')
 pc = h.ParallelContext()
 rank = int(pc.id())
 nhost = int(pc.nhost())
@@ -158,11 +178,11 @@ def spike_record():
   idvec = h.Vector(1000000)
   pc.spike_record(-1, tvec, idvec)
 
-def spikeout():
+def spikeout(folder):
   #to out<nhost>.dat file
   global tvec, idvec
   pc.barrier()
-  fname = 'out%d.dat'%nhost
+  fname = folder + '/spk%d.std'%nhost
   if rank == 0:
     f = open(fname, 'w')
     f.close()
@@ -184,6 +204,19 @@ def timeit(message):
     _timeit = x
 
 if __name__ == '__main__':
+
+  # unique folder for nrnbbcore_write data and a
+  # add it to a dict file that records the args associated
+  # with the folder
+  arghash = str(args).__hash__() & 0xffffffffff
+  bbcorewrite_folder = args.coredat + '/' + str(arghash)
+  import os
+  os.mkdir(bbcorewrite_folder)
+  print 'created', bbcorewrite_folder
+  f = open(args.coredat + '/dict', "a")
+  f.write(str(arghash) + ' : "' + str(args) + '"\n')
+  f.close()
+
   timeit(None)
   rings = [Ring(ncell, nbranch, ncompart, ntype, i*ncell) for i in range(nring)]
   print "typecellcnt [[type,cnt],...]", typecellcnt
@@ -200,18 +233,19 @@ if __name__ == '__main__':
   for sec in h.allsec():
     ns += sec.nseg
   print "%d non-zero area compartments"%ns
-  #h.topology()
+  if args.show:
+    h.topology()
   spike_record()
   if usegap:
     pc.setup_transfer()
   pc.set_maxstep(10)
   h.stdinit()
   timeit("initialized")
-  pc.nrnbbcore_write("dat")
+  pc.nrnbbcore_write(bbcorewrite_folder)
   timeit("wrote coreneuron data")
   pc.psolve(tstop)  
   timeit("run")
-  spikeout()
+  spikeout(bbcorewrite_folder)
   timeit("wrote %d spikes"%len(tvec))
 
   if nhost > 1:
