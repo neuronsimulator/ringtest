@@ -90,6 +90,8 @@ def celltypeinfo(gid, nbranch, ncompart, ntype):
 
 class Ring(object):
 
+  counter = 0
+
   def __init__(self, ncell, nbranch, ncompart, ntype, gidstart):
     #print "construct ", self
     if usegap:
@@ -102,6 +104,12 @@ class Ring(object):
     self.gidstart = gidstart
     self.mkring(self.ncell, nbranch, ncompart, ntype)
     self.mkstim()
+
+    Ring.counter += 1
+    if 1:
+      import sys
+      print "%d\r"%Ring.counter,
+      sys.stdout.flush()
 
   def mkring(self, ncell, nbranch, ncompart, ntype):
     self.mkcells(ncell, nbranch, ncompart, ntype)

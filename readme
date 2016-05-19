@@ -18,7 +18,7 @@ For vizcluster with GPU and PG compiler
 1. Allocate node on vizcluster (need to use perfengineering queue) which
 has PGI compiler license that I have installed:
 
-salloc --account=proj16 -N 1 -n 2 --time=9:00:00 --nodelist=bbpviz036 -p interactive
+salloc --reservation perftest --account=proj16 -N 1 -n 2 --time=9:00:00 --nodelist=bbpviz036 -p interactive
 
 2. Remove all modules and use the PGI module that I have installed:
 
