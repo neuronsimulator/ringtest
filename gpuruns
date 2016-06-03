@@ -1,0 +1,30 @@
+#!/usr/bin/python
+import subprocess
+
+cnr = '$HOME/bbgpu/manage_corenrn_sims/corenrnrun'
+
+#metrics="dram_read_throughput,dram_write_throughput,stall_data_request"
+metrics="gld_transactions,gld_transactions_per_request"
+kernels="solve|lhs|rhs|pas"
+
+def cnr_run(args):
+  #cmd = '%s -p -o 1 -b buildgpu -cnargs "%s"' % (cnr, args)
+  #cmd = '%s -p -o 5 -k "%s" -b buildgpu -cnargs "%s"' % (cnr, kernels, args)
+  cmd = '%s -p -o 6 -m "%s" -k "%s" -b buildgpu -cnargs "%s"' % (cnr, metrics, kernels, args)
+  print cmd
+  subprocess.call(cmd, shell='True')
+
+i=4
+p=2
+datval=348786116239
+#for i in [1, 2, 4, 8, 16, 32, 64]:
+
+for p in [1, 2]:
+ for datval in [778044156423, 82535235401, 224110367005, 1098746286905, 433287714075, 7139244716]:
+ #for datval in [676964322668, 534263631271]:
+  datpath="dat/%d" % datval
+  nwarp=0*i*78
+  permute=p
+  tstop=10
+  args='--cell_permute=%s --nwarp=%d --datpath=%s --tstop=%g' % (permute, nwarp, datpath, tstop)
+  cnr_run(args)
