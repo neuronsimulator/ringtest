@@ -1,7 +1,5 @@
 import argparse
-parser = argparse.ArgumentParser(prefix_chars='-r')
-parser.add_argument("-python", action='store_true')
-parser.add_argument("-mpi", action='store_true')
+parser = argparse.ArgumentParser()
 parser.add_argument("-nring", metavar='N', help="number of rings (default 16)", type=int, default=16)
 parser.add_argument("-ncell", metavar='N', help="number of cells per ring (default 8)", type=int, default=8)
 parser.add_argument('-npt', metavar='N', help="number of cells per type (default 8)", type=int, default=8)
@@ -12,8 +10,7 @@ parser.add_argument("-gran", metavar='N', help="global Random123 index (default 
 parser.add_argument("-rparm", dest='rparm', action='store_true', help="randomize parameters", default=False)
 parser.add_argument("-show", action='store_true', help="show type topologies", default=False)
 parser.add_argument("-coredat", metavar='path', help="folder for bbcorewrite hashname folders (default coredat)", default='coredat')
-parser.add_argument("ringtest.py", action='store_true')
-args = parser.parse_args()
+args,unknown = parser.parse_known_args()
 
 nring=args.nring
 ncell=args.ncell# number of cells per ring
