@@ -9,6 +9,7 @@ parser.add_argument("-tstop", metavar='float', help="stop time (ms) (default 100
 parser.add_argument("-gran", metavar='N', help="global Random123 index (default 0)", type=int, default=0)
 parser.add_argument("-rparm", dest='rparm', action='store_true', help="randomize parameters", default=False)
 parser.add_argument("-show", action='store_true', help="show type topologies", default=False)
+parser.add_argument("-gap", action='store_true', help="use gap junctions", default=False)
 parser.add_argument("-coredat", metavar='path', help="folder for bbcorewrite hashname folders (default coredat)", default='coredat')
 args,unknown = parser.parse_known_args()
 
@@ -30,7 +31,7 @@ ntype=(nring*ncell - 1)/ncell_per_type + 1
 print "nring=%d\ncell per ring=%d\nncell_per_type=%d"%(nring, ncell, ncell_per_type)
 print "ntype=%d"%ntype
 
-usegap = False
+usegap = args.gap
 
 tstop=args.tstop
 randomize_parameters = args.rparm
@@ -46,21 +47,19 @@ nhost = int(pc.nhost())
 #from cell import BallStick
 h.load_file("cell.hoc")
 
+#for nhost independent type for gid
+#shuffle elements of vec
+def shuffle(vec, ran):
+  n = len(vec)-1;
+  for i in range(n+1):
+    ix = int(ran.discunif(i, n))
+    vec[i], vec[ix] = vec[ix], vec[i]
+  return vec
+
 typecellcnt = [[i, 0] for i in range(ntype)]
 
-def celltypeinfo(gid, nbranch, ncompart, ntype):
-  global typecellcnt
+def celltypeinfo(type, nbranch, ncompart):
   r = h.Random()
-  r.Random123(gid, 1)
-  # every type has exactly ncell_per_type
-  i = int(r.discunif(0, len(typecellcnt)-1))
-  type = typecellcnt[i][0];
-  typecellcnt[i][1] += 1
-  if typecellcnt[i][1] >= ncell_per_type:
-    typecellcnt.pop(i)
-
-  #print "gid=%d type=%d"%(gid, type)
-  
   r.Random123(type, 2)
   nb = int(r.discunif(nbranch[0], nbranch[1]))
   secpar = h.Vector(nb)
@@ -89,7 +88,7 @@ class Ring(object):
 
   counter = 0
 
-  def __init__(self, ncell, nbranch, ncompart, ntype, gidstart):
+  def __init__(self, ncell, nbranch, ncompart, gidstart, types):
     #print "construct ", self
     if usegap:
       global nring
@@ -99,7 +98,7 @@ class Ring(object):
     self.delay = 1
     self.ncell = int(ncell)
     self.gidstart = gidstart
-    self.mkring(self.ncell, nbranch, ncompart, ntype)
+    self.mkring(self.ncell, nbranch, ncompart, types)
     self.mkstim()
 
     Ring.counter += 1
@@ -108,17 +107,18 @@ class Ring(object):
       print "%d\r"%Ring.counter,
       sys.stdout.flush()
 
-  def mkring(self, ncell, nbranch, ncompart, ntype):
-    self.mkcells(ncell, nbranch, ncompart, ntype)
+  def mkring(self, ncell, nbranch, ncompart, types):
+    self.mkcells(ncell, nbranch, ncompart, types)
     self.connectcells(ncell)
 
-  def mkcells(self, ncell, nbranch, ncompart, ntype):
+  def mkcells(self, ncell, nbranch, ncompart, types):
     global rank, nhost
     self.cells = []
     for i in range(rank + self.gidstart, ncell + self.gidstart, nhost):
       gid = i
+      type = types[gid]
       self.gids.append(gid)
-      secpar, segvec = celltypeinfo(gid, nbranch, ncompart, ntype)
+      secpar, segvec = celltypeinfo(type, nbranch, ncompart)
       cell = h.B_BallStick(secpar, segvec)
       self.cells.append(cell)
       pc.set_gid2node(gid, rank)
@@ -216,16 +216,21 @@ if __name__ == '__main__':
   # with the folder
   arghash = str(args).__hash__() & 0xffffffffff
   bbcorewrite_folder = args.coredat + '/' + str(arghash)
-  import os
-  os.mkdir(bbcorewrite_folder)
-  print 'created', bbcorewrite_folder
-  f = open(args.coredat + '/dict', "a")
-  f.write(str(arghash) + ' : "' + str(args) + '"\n')
-  f.close()
+  if rank is 0:
+    import os
+    os.mkdir(bbcorewrite_folder)
+    print 'created', bbcorewrite_folder
+    f = open(args.coredat + '/dict', "a")
+    f.write(str(arghash) + ' : "' + str(args) + '"\n')
+    f.close()
+  pc.barrier()
 
   timeit(None)
-  rings = [Ring(ncell, nbranch, ncompart, ntype, i*ncell) for i in range(nring)]
-  print "typecellcnt [[type,cnt],...]", typecellcnt
+  ran = h.Random()
+  ran.Random123(0,1)
+  types = shuffle([i%ntype for i in range(ncell*nring)], ran)
+  rings = [Ring(ncell, nbranch, ncompart, i*ncell, types) for i in range(nring)]
+  if rank is 0: print "cells per type", ncell*nring/ntype
   timeit("created rings")
   if randomize_parameters:
     from ranparm import cellran
@@ -252,7 +257,7 @@ if __name__ == '__main__':
   pc.psolve(tstop)  
   timeit("run")
   spikeout(bbcorewrite_folder)
-  timeit("wrote %d spikes"%len(tvec))
+  timeit("wrote %d spikes%s"%( int(pc.allreduce(tvec.size(), 1)), ("" if nhost == 1 else " (unsorted)")))
 
   if nhost > 1:
     pc.barrier()
