@@ -19,17 +19,14 @@ ncell_per_type = args.npt
 
 nbranch=args.branch # min, max random number of dend sections (random tree topology)
 ncompart=args.compart # min, max random nseg for each branch
-print nbranch, ncompart
 
 # number of distinct cell types (same branching and compartments)
 #each cell has random type [0:ntype]
 ntype=(nring*ncell - 1)/ncell_per_type + 1
+
 #note that if branching is small and variation of nbranch and ncompart
 #  is small then not all types may have distinct topologies
 #  CoreNEURON will print number of distinct topologies.
-
-print "nring=%d\ncell per ring=%d\nncell_per_type=%d"%(nring, ncell, ncell_per_type)
-print "ntype=%d"%ntype
 
 usegap = args.gap
 
@@ -44,6 +41,12 @@ h.load_file('stdgui.hoc')
 pc = h.ParallelContext()
 rank = int(pc.id())
 nhost = int(pc.nhost())
+
+if rank == 0:
+  print nbranch, ncompart
+  print "nring=%d\ncell per ring=%d\nncell_per_type=%d"%(nring, ncell, ncell_per_type)
+  print "ntype=%d"%ntype
+
 #from cell import BallStick
 h.load_file("cell.hoc")
 
@@ -230,7 +233,6 @@ if __name__ == '__main__':
   ran.Random123(0,1)
   types = shuffle([i%ntype for i in range(ncell*nring)], ran)
   rings = [Ring(ncell, nbranch, ncompart, i*ncell, types) for i in range(nring)]
-  if rank is 0: print "cells per type", ncell*nring/ntype
   timeit("created rings")
   if randomize_parameters:
     from ranparm import cellran
