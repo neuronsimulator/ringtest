@@ -165,7 +165,7 @@ class Ring(object):
     pc.source_var(seg._ref_v, sid_tar, sec=seg.sec)
     hg = h.HalfGap(seg)
     pc.target_var(hg, hg._ref_vgap, sid_src)
-    hg.g = 0.003 # do not randomize as must be same for other side of gap
+    hg.g = 0.04 # do not randomize as must be same for other side of gap
     self.halfgap_list.append(hg)
 
   #Instrumentation - stimulation and recording
