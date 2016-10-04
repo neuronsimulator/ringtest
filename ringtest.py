@@ -245,7 +245,8 @@ if __name__ == '__main__':
   ns = 0
   for sec in h.allsec():
     ns += sec.nseg
-  print "%d non-zero area compartments"%ns
+  ns = pc.allreduce(ns, 1)
+  if rank == 0:print "%d non-zero area compartments"%ns
   if args.show:
     h.topology()
   spike_record()
