@@ -212,6 +212,81 @@ def timeit(message):
     if rank == 0: print '%gs %s'%((x - _timeit), message)
     _timeit = x
 
+# function to register section-segment with bbcore write
+def setup_nrnbbcore_register_mapping(rings):
+
+  #for recording
+  recordlist = []
+
+  #vector for soma sections and segment
+  somasec = h.Vector()
+  somaseg = h.Vector()
+
+  #vector for dendrite sections and segment
+  densec = h.Vector()
+  denseg = h.Vector()
+
+  #all rings in the simulation
+  for ring in rings:
+
+    #every gid in the ring
+    for gid in ring.gids:
+
+      #clear previous vector if any
+      somasec.size(0)
+      somaseg.size(0)
+      densec.size(0)
+      denseg.size(0)
+
+      #if gid exist on rank
+      if (pc.gid_exists(gid)):
+
+        #get cell instance
+        cell = pc.gid2cell(gid)
+        isec = 0
+
+        #soma section, only pne
+        for sec in [cell.soma]:
+          for seg in sec:
+            #get section and segment index
+            somasec.append(isec)
+            somaseg.append(seg.node_index())
+
+            #vector for recording
+            v = h.Vector()
+            v.record(seg._ref_v)
+            v.label("soma %d %d"%(isec, seg.node_index()))
+            recordlist.append(v)
+        isec += 1
+
+        #for sections in dendrite
+        for sec in cell.den:
+          for seg in sec:
+            densec.append(isec)
+            denseg.append(seg.node_index())
+
+            #for recordings
+            v = h.Vector()
+            v.record(seg._ref_v)
+            v.label("dend %d %d"%(isec, seg.node_index()))
+            recordlist.append(v)
+          isec += 1
+
+    #register soma section list
+    pc.nrnbbcore_register_mapping(gid, "soma", somasec, somaseg)
+
+    #register dend section list
+    pc.nrnbbcore_register_mapping(gid, "dend", densec, denseg)
+
+  return recordlist
+
+#print voltages
+def voltageout(foldername, recordlist):
+  for vec in recordlist:
+    #print only last record
+    print vec.label(), vec.x[int(vec.size())-1]
+    #vec.printf()
+
 if __name__ == '__main__':
 
   # unique folder for nrnbbcore_write data and a
@@ -252,16 +327,26 @@ if __name__ == '__main__':
   spike_record()
   if usegap:
     pc.setup_transfer()
+
+  #register section segment list
+  recordlist = setup_nrnbbcore_register_mapping(rings)
+
   pc.set_maxstep(10)
   h.stdinit()
   timeit("initialized")
+
   pc.nrnbbcore_write(bbcorewrite_folder)
+
   timeit("wrote coreneuron data")
-  pc.psolve(tstop)  
+  pc.psolve(tstop)
   timeit("run")
   spikeout(bbcorewrite_folder)
+
+  #print voltages
+  voltageout(bbcorewrite_folder, recordlist)
+
   timeit("wrote %d spikes%s"%( int(pc.allreduce(tvec.size(), 1)), ("" if nhost == 1 else " (unsorted)")))
 
   if nhost > 1:
     pc.barrier()
-    h.quit()
+  h.quit()
