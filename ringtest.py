@@ -61,6 +61,12 @@ parser.add_argument("-coredat",
                     help="folder for bbcorewrite hashname folders (default coredat)",
                     default='coredat')
 
+#option to append hash to coredat directory or not
+feature_parser = parser.add_mutually_exclusive_group(required=False)
+feature_parser.add_argument('--coredathash', dest='appendhash', action='store_true')
+feature_parser.add_argument('--no-coredathash', dest='appendhash', action='store_false')
+parser.set_defaults(appendhash=True)
+
 args, unknown = parser.parse_known_args()
 
 nring = args.nring
@@ -82,6 +88,7 @@ usegap = args.gap
 
 tstop = args.tstop
 randomize_parameters = args.rparm
+appendhash = args.appendhash
 
 from neuron import h
 
@@ -353,7 +360,11 @@ if __name__ == '__main__':
     # add it to a dict file that records the args associated
     # with the folder
     arghash = str(args).__hash__() & 0xffffffffff
-    bbcorewrite_folder = args.coredat + '/' + str(arghash)
+    if appendhash:
+        bbcorewrite_folder = args.coredat + '/' + str(arghash)
+    else:
+        bbcorewrite_folder = args.coredat + '/'
+
     if rank is 0:
         mkdir_p(bbcorewrite_folder)
         print 'created', bbcorewrite_folder
