@@ -5,10 +5,11 @@ parser = argparse.ArgumentParser()
 
 # command line arguments
 
-parser.add_argument(
-    "-nring", metavar='N',
-    help="number of rings (default 16)",
-    type=int, default=16)
+parser.add_argument("-nring",
+                    metavar='N',
+                    help="number of rings (default 16)",
+                    type=int,
+                    default=16)
 
 parser.add_argument("-ncell",
                     metavar='N',
@@ -16,10 +17,11 @@ parser.add_argument("-ncell",
                     type=int,
                     default=8)
 
-parser.add_argument(
-    '-npt', metavar='N',
-    help="number of cells per type (default 8)",
-    type=int, default=8)
+parser.add_argument('-npt',
+                    metavar='N',
+                    help="number of cells per type (default 8)",
+                    type=int,
+                    default=8)
 
 parser.add_argument("-branch",
                     metavar='N',
@@ -41,10 +43,11 @@ parser.add_argument("-tstop",
                     type=float,
                     default=100.)
 
-parser.add_argument(
-    "-gran", metavar='N',
-    help="global Random123 index (default 0)",
-    type=int, default=0)
+parser.add_argument("-gran",
+                    metavar='N',
+                    help="global Random123 index (default 0)",
+                    type=int,
+                    default=0)
 
 parser.add_argument("-rparm",
                     dest='rparm',
@@ -63,8 +66,14 @@ parser.add_argument("-coredat",
 
 #option to append hash to coredat directory or not
 feature_parser = parser.add_mutually_exclusive_group(required=False)
-feature_parser.add_argument('--coredathash', dest='appendhash', action='store_true')
-feature_parser.add_argument('--no-coredathash', dest='appendhash', action='store_false')
+feature_parser.add_argument('--coredathash',
+                            help="append arguments hash as a sub-directory to coredat",
+                            dest='appendhash',
+                            action='store_true')
+feature_parser.add_argument('--no-coredathash',
+                            help="don't append arguments hash as a sub-directory to coredat",
+                            dest='appendhash',
+                            action='store_false')
 parser.set_defaults(appendhash=True)
 
 args, unknown = parser.parse_known_args()
