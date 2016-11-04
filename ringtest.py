@@ -55,6 +55,12 @@ parser.add_argument("-rparm",
                     help="randomize parameters",
                     default=False)
 
+parser.add_argument("-secmapping",
+                    dest='secmapping',
+                    action='store_true',
+                    help="store section segment mapping",
+                    default=False)
+
 parser.add_argument("-show", action='store_true', help="show type topologies", default=False)
 
 parser.add_argument("-gap", action='store_true', help="use gap junctions", default=False)
@@ -98,6 +104,7 @@ usegap = args.gap
 tstop = args.tstop
 randomize_parameters = args.rparm
 appendhash = args.appendhash
+secseg_mapping = args.secmapping
 
 from neuron import h
 
@@ -408,8 +415,9 @@ if __name__ == '__main__':
     if usegap:
         pc.setup_transfer()
 
-    #register section segment list
-    recordlist = setup_nrnbbcore_register_mapping(rings)
+    # register section segment list
+    if secseg_mapping:
+        recordlist = setup_nrnbbcore_register_mapping(rings)
 
     pc.set_maxstep(10)
     h.stdinit()
@@ -422,8 +430,9 @@ if __name__ == '__main__':
     timeit("run")
     spikeout(bbcorewrite_folder)
 
-    #print voltages
-    #voltageout(bbcorewrite_folder, recordlist)
+    # print voltages
+    if secseg_mapping:
+        voltageout(bbcorewrite_folder, recordlist)
 
     timeit("wrote %d spikes%s" % (int(pc.allreduce(tvec.size(), 1)),
                                   ("" if nhost == 1 else " (unsorted)")))
