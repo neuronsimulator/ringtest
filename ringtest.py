@@ -167,7 +167,7 @@ class Ring(object):
     pc.source_var(seg._ref_v, sid_tar, sec=seg.sec)
     hg = h.HalfGap(seg)
     pc.target_var(hg, hg._ref_vgap, sid_src)
-    hg.g = 0.003 # do not randomize as must be same for other side of gap
+    hg.g = 0.04 # do not randomize as must be same for other side of gap
     self.halfgap_list.append(hg)
 
   #Instrumentation - stimulation and recording
@@ -262,7 +262,8 @@ if __name__ == '__main__':
   ns = 0
   for sec in h.allsec():
     ns += sec.nseg
-  print "%d non-zero area compartments"%ns
+  ns = pc.allreduce(ns, 1)
+  if rank == 0:print "%d non-zero area compartments"%ns
   if args.show:
     h.topology()
   spike_record()
