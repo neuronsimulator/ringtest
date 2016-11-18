@@ -119,7 +119,8 @@ class Ring(object):
   def mkcells(self, ncell, nbranch, ncompart, types):
     global rank, nhost
     self.cells = []
-    for i in range(rank + self.gidstart, ncell + self.gidstart, nhost):
+    for i in range(self.gidstart, ncell + self.gidstart):
+      if (i%nhost) != rank: continue
       gid = i
       type = types[gid]
       self.gids.append(gid)
