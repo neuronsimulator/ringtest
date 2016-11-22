@@ -65,6 +65,8 @@ parser.add_argument("-show", action='store_true', help="show type topologies", d
 
 parser.add_argument("-gap", action='store_true', help="use gap junctions", default=False)
 
+parser.add_argument("-nt", metavar='N', help="nthread", type=int, default=1)
+
 parser.add_argument("-coredat",
                     metavar='path',
                     help="folder for bbcorewrite hashname folders (default coredat)",
@@ -114,6 +116,7 @@ h.load_file('stdgui.hoc')
 pc = h.ParallelContext()
 rank = int(pc.id())
 nhost = int(pc.nhost())
+pc.nthread(args.nt, 1)
 
 if rank == 0:
     print nbranch, ncompart
@@ -194,7 +197,9 @@ class Ring(object):
     def mkcells(self, ncell, nbranch, ncompart, types):
         global rank, nhost
         self.cells = []
-        for i in range(rank + self.gidstart, ncell + self.gidstart, nhost):
+        for i in range(self.gidstart, ncell + self.gidstart):
+            if (i % nhost) != rank:
+                continue
             gid = i
             type = types[gid]
             self.gids.append(gid)
@@ -370,6 +375,22 @@ def voltageout(foldername, recordlist):
         #vec.printf()
 
 
+def prun(tstop):
+    runtime = h.startsw()
+    wait = pc.wait_time()
+    pc.psolve(tstop)
+    wait = pc.wait_time() - wait
+    runtime = h.startsw() - runtime
+    computation_time = pc.step_time()
+    cw_time = computation_time + pc.step_wait()
+    max_cw_time = pc.allreduce(cw_time, 2)
+    avg_comp_time = pc.allreduce(computation_time, 1) / nhost
+    load_balance = avg_comp_time / max_cw_time
+    spk_time = (pc.allreduce(wait, 2), pc.allreduce(wait, 3))
+    gap_time = (pc.allreduce(pc.vtransfer_time(), 2), pc.allreduce(pc.vtransfer_time(), 3))
+    return runtime, load_balance, avg_comp_time, spk_time, gap_time
+
+
 if __name__ == '__main__':
 
     # unique folder for nrnbbcore_write data and a
@@ -426,7 +447,7 @@ if __name__ == '__main__':
     pc.nrnbbcore_write(bbcorewrite_folder)
 
     timeit("wrote coreneuron data")
-    pc.psolve(tstop)
+    runtime, load_balance, avg_comp_time, spk_time, gap_time = prun(tstop)
     timeit("run")
     spikeout(bbcorewrite_folder)
 
@@ -436,6 +457,12 @@ if __name__ == '__main__':
 
     timeit("wrote %d spikes%s" % (int(pc.allreduce(tvec.size(), 1)),
                                   ("" if nhost == 1 else " (unsorted)")))
+
+    if rank == 0:
+        print("runtime=%g  load_balance=%.1f%%  avg_comp_time=%g" %
+              (runtime, load_balance * 100, avg_comp_time))
+        print("spk_time max=%g min=%g" % (spk_time[0], spk_time[1]))
+        print("gap_time max=%g min=%g" % (gap_time[0], gap_time[1]))
 
     if nhost > 1:
         pc.barrier()
