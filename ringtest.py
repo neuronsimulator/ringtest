@@ -72,17 +72,12 @@ parser.add_argument("-coredat",
                     help="folder for bbcorewrite hashname folders (default coredat)",
                     default='coredat')
 
-#option to append hash to coredat directory or not
-feature_parser = parser.add_mutually_exclusive_group(required=False)
-feature_parser.add_argument('--coredathash',
-                            help="append arguments hash as a sub-directory to coredat",
-                            dest='appendhash',
-                            action='store_true')
-feature_parser.add_argument('--no-coredathash',
-                            help="don't append arguments hash as a sub-directory to coredat",
-                            dest='appendhash',
-                            action='store_false')
-parser.set_defaults(appendhash=True)
+#option to remove hash from coredat directory
+parser.add_argument('-coredathash',
+                    dest='appendhash',
+                    action='store_true',
+                    help="append argument's hash as a sub-directory to coredat directory",
+                    default=False)
 
 args, unknown = parser.parse_known_args()
 
@@ -370,7 +365,7 @@ def setup_nrnbbcore_register_mapping(rings):
 #print voltages
 def voltageout(foldername, recordlist):
     for vec in recordlist:
-        #print only last record
+        #print only last recorded
         print vec.label(), vec.x[int(vec.size()) - 1]
         #vec.printf()
 
@@ -452,8 +447,8 @@ if __name__ == '__main__':
     spikeout(bbcorewrite_folder)
 
     # print voltages
-    if secseg_mapping:
-        voltageout(bbcorewrite_folder, recordlist)
+    # if secseg_mapping:
+    #    voltageout(bbcorewrite_folder, recordlist)
 
     timeit("wrote %d spikes%s" % (int(pc.allreduce(tvec.size(), 1)),
                                   ("" if nhost == 1 else " (unsorted)")))
