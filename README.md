@@ -5,28 +5,32 @@
 This tutorial shows how to build simple network model using [NEURON](https://www.neuron.yale.edu/neuron/) and simulating it using [CoreNEURON](https://github.com/BlueBrain/CoreNeuron).
 
 ## Features
-Here we briefly specify which type of simulations or features are currently supported by CoreNEURON :
+Type of simulations currently supported by CoreNEURON :
 
+* todo 1
+* todo 2
+* todo 3
+
+##### Goals of CoreNEURON
 * Simulating larger network models on modern supercomputing platforms
-* Support of multi-threading using OpenMP
+* Reduce memory footprint (5x-7x lower memory usage)
 * Support for GPUs using OpenACC
 * Efficient vectorisation and Memory layout support (AoS/SoA)
-* todo
-
+* todo 1
 
 ##### Limitations
 
-* Support fixed time-step only (no variable time-step support)
+* Only supports fixed time-step (no variable time-step support)
 * No support for multi-split
 * No support for HOC/Python scripting during execution time (you can use HOC/Python from NEURON to build models)
-* todo
+* todo 1
 
 ## Installation
 
-This section provide instructions to install NEURON, CoreNEURON and dependencies. Note that these instructions are for standard `x86-linux` platform. See [CoreNEURON page](https://github.com/BlueBrain/CoreNeuron) for information about other architectures like BG-Q, GPU etc.
+This section provide instructions to install NEURON, CoreNEURON and dependencies. Note that these instructions are for standard `x86-linux` platform. See [CoreNEURON page](https://github.com/BlueBrain/CoreNeuron) and [NEURON page](http://neuron.yale.edu/neuron/download/getdevel) for information about other architectures like BG-Q, GPU etc.
 
 #### Cloning repositories
-In order to use NEURON and CoreNEURON we have to download following repositories:
+In order to use NEURON and CoreNEURON together we have to download following repositories:
 
 * [NEURON](https://github.com/nrnhines/nrn)
 * [CoreNEURON](https://github.com/BlueBrain/CoreNeuron)
@@ -34,9 +38,10 @@ In order to use NEURON and CoreNEURON we have to download following repositories
 
 Below are additional package dependecies :
 
-* [CMake 2.8.12+](https://cmake.org) (or 3.5 for GPU systems)
+* [CMake 2.8.12+](https://cmake.org) (3.5 for GPU systems)
 * [MPI 2.0+](http://mpich.org) [optional, for parallel simulations]
 * [PGI OpenACC Compiler >=16.3](https://www.pgroup.com/resources/accel.htm) [optional, for GPU systems]
+* [CUDA >=6.0](https://developer.nvidia.com/cuda-toolkit-60) [optional, for GPU systems]
 
 
 Here are github repositories:
@@ -47,17 +52,17 @@ https://github.com/BlueBrain/mod2c.git
 https://github.com/nrnhines/nrn.git
 ```
 
-Note that we are using NEURON github mirror repository. You can also clone mercurial repository from [neuron.yale.edu](http://neuron.yale.edu/neuron/download/getdevel). 
+Note that we are using NEURON github mirror repository. You can also clone mercurial repository from [neuron.yale.edu](http://neuron.yale.edu/neuron/download/getdevel).
 
 ###### Changes in NEURON
-In order to support GPU platform we have to modify Hodgkin–Huxley model in NEURON (**i.e. hh.mod**). Note that this doesn't change any behaviour of model itself.
+For this tutorial, in order to support GPU platform, we have to modify Hodgkin–Huxley model in NEURON (**i.e. hh.mod**). (note that this doesn't change any behaviour of model itself).
 
 ```bash
 cd nrn
 sed -i -e 's/GLOBAL minf/RANGE minf/g' src/nrnoc/hh.mod
 sed -i -e 's/TABLE minf/:TABLE minf/g' src/nrnoc/hh.mod
 ```
-(.i.e. we are disabling use of **TABLE** statements and replacing **GLOBAL** variables with **RANGE**). This will be transparently handle by NEURON and CoreNEURON in near future.
+> NOTE : We are disabling use of **TABLE** statements and replacing **GLOBAL** variables with **RANGE**). This will be transparently handle by NEURON and CoreNEURON in near future.
 
 ##### Installation
 
@@ -124,7 +129,7 @@ git clone https://github.com/pramodk/ringtest.git
 cd ringtest && git checkout tutorial
 ```
 
-This repository contains `mod sub-directory` which has additional mod files (for gap-juction related test). Using standard NEURON workflow, we can build `special` executable using `nrnivmodl` as:
+This repository contains `mod` sub-directory which has MOD files (for gap-juction related test). Using standard NEURON workflow, we can build `special` executable using `nrnivmodl` as:
 
 ```bash
 cd $SOURCE_DIR/ringtest
@@ -133,7 +138,7 @@ nrnivmodl mod
 
 This will create `x86_64/special` executable in the `ringtest` directory.
 
-Now we are ready to run this ring model using `NEURON` as:
+Now we are ready to run this model using `NEURON` as:
 
 ```bash
 cd $SOURCE_DIR/ringtest
@@ -148,21 +153,23 @@ The `ringtest.py` has following code section :
 
 ```
 # write intermediate dataset for coreneuron
-pc.nrnbbcore_write(bbcorewrite_folder)
-    
+pc.nrnbbcore_write(folder)
+
 # run simulation using NEURON
 runtime, load_balance, avg_comp_time, spk_time, gap_time = prun(tstop)
 ```
 
-`ParallelContext` object in NEURON has new method called `nrnbbcore_write`. We have to call this method once we build the model using `Python` / `HOC` interface. This method dumps in-memory model to binary files in specified directory (`coreneuron_data ` in this case). Once this model is dumped to file, CoreNEURON can read and then start simulating same model.
+`ParallelContext` object in NEURON has new method called `nrnbbcore_write`. We have to call this method once we build the model using `Python` / `HOC` interface of NEURON. `nrnbbcore_write` method dumps in-memory network model to binary files in specified directory (`coreneuron_data ` in previous command). Once this model is dumped to file, CoreNEURON can read and continue simulation of the model.
 
-> NOTE : typically this will be only change in your exisiting Python / HOC scripts i.e. an additional call to pc.nrnbbcore\_write("directory_name"). Also you should comment out call to pc.psolve(time) (unless you want to run simulations using NEURON and compare with CoreNEURON).
+> NOTE : typically only change in your exisiting Python / HOC scripts will be an additional call to pc.nrnbbcore\_write("directory_name"). 
 
-Note that in `ringtest.py` we call `prun` method which internally calls ` pc.psolve(tstop)`. This will simulate model using `NEURON`. If you just want to simulate model using `CoreNEURON` then you can comment out `prun` function call (and `print` messages at the end of the file).
+> NOTE : you should comment out call to pc.psolve(time) (unless you want to run simulations using NEURON and compare the results with CoreNEURON).
 
-Once intermediate dataset is generated successfully, we can use CoreNEURON for simulating the model.
+Note that in `ringtest.py` has `prun` method which internally calls ` pc.psolve(tstop)`. This will simulate model using `NEURON`. If you just want to build model using NEURON and simulate with `CoreNEURON` then you can comment out `prun` function call (and `print` messages at the end of the file).
 
-Let's first build CoreNEURON executable as:
+Once you run NEURON and dataset is generated, we can run CoreNEURON for simulating the model.
+
+Similar to `special` in NEURON, we have to build CoreNEURON executable:
 
 ```bash
 cd $SOURCE_DIR/ringtest
@@ -171,7 +178,7 @@ cmake $BASE_DIR/sources/CoreNeuron -DADDITIONAL_MECHPATH=`pwd`/mod
 make -j
 ```
 
-This will create `CoreNEURON` executable under `coreneuron_x86/bin/coreneuron_exec`. Note that we have to use `-DADDITIONAL_MECHPATH` argument with the directory path of `mod` files (otherwise CoreNEURON will be built with only internal mod files).
+This will create `coreneuron_exec ` executable under `coreneuron_x86/bin/`. Note that we have to use `-DADDITIONAL_MECHPATH` argument with the directory path of `mod` files (otherwise CoreNEURON will be built with only internal MOD files).
 
 > NOTE : You have to recompile CoreNEURON (using `cmake` / `make`) if you change/add MOD files. This is similar to building new `special` with `nrnivmodl`.
 
@@ -191,7 +198,7 @@ diff -w out0.dat coreneuron_data/spk1.std
 ```
 The spikes should be identical between NEURON and CoreNEURON.
 
-Here is complete installation script that we used for testing :
+Here is complete build and run script that we used for testing :
 
 ```bash
 #!/bin/bash
@@ -273,7 +280,7 @@ For running simulations on cluster or supercomputing platform, the workflow rema
 * Now launch CoreNEURON with `N` mpi ranks and `1` OpenMP thread per rank (`pure-mpi` mode). OR, you can launch `X` threads per rank and `N`/ `X` MPI ranks.
 
 
-For example, we launch parallel simulation using `4 mpi ranks` with NEURON as : 
+For example, we launch parallel simulation using `4 mpi ranks` with NEURON as :
 
 ```bash
 mpirun -n 4 ./x86_64/special -mpi -python ringtest.py -tstop 100 -coredat coreneuron_data
@@ -293,7 +300,7 @@ export OMP_NUM_THREADS=2
 mpiexec -n 2 ./coreneuron_x86/bin/coreneuron_exec -e 100 -d coreneuron_data/ -mpi
 ```
 
-Note that each rank of CoreNEURON writes separate spike output file. You have to combine and sort the spikes : 
+Note that each rank of CoreNEURON writes separate spike output file. You have to combine and sort the spikes :
 
 ```
 cat out[0-9]*.dat | sort -k 1n,1n -k 2n,2n > out.spk.coreneuron
@@ -349,7 +356,7 @@ Here are some additional points if you want to compare performance between NEURO
 mpirun -n 4 ./x86_64/special -mpi -python ringtest.py -tstop 100 -coredat coreneuron_data -nring 1024 -ncell 128 -branch 32 64
 ```
 
-See command line arguments for more information about arguments : 
+See command line arguments for more information about arguments :
 
 ```
 
