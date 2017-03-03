@@ -164,7 +164,7 @@ The `ParallelContext` object in NEURON has a new method called `nrnbbcore_write`
 
 > Note : `nrnbbcore_write` requires that the NEURON's internal data structures be in cache efficient form and hence the `cvode.cache_efficient(1)` method must be executed prior to initialization of the model.
 
-> NOTE : typically the only change in your existing Python / HOC scripts will be an additional call to pc.nrnbbcore\_write("directory_name"). 
+> NOTE : typically the only change in your existing Python / HOC scripts will be an additional call to pc.nrnbbcore\_write("directory_name").
 
 > NOTE : you should comment out the call to pc.psolve(time) (unless you want to run simulations using NEURON and compare the results with CoreNEURON).
 
@@ -274,6 +274,30 @@ cd $SOURCE_DIR/ringtest
 diff -w out0.dat coreneuron_data/spk1.std
 ```
 
+## Building CoreNEURON with GPU support
+
+CoreNEURON has support for GPU execution using OpenACC programming model when enabled with `-DENABLE_OPENACC=ON`. Note that you need working installation of PGI compiler with OpenACC support.
+Here are the steps to compile with PGI compiler:
+
+```bash
+module purge                                #remove conflicting modules if any
+module load pgi/pgi64/16.5 pgi/mpich/16.5   #change PGI / CUDA versions
+module load cuda/6.0
+export CC=mpicc
+export CXX=mpicxx
+
+cd $SOURCE_DIR/ringtest
+mkdir -p coreneuron_x86_gpu && cd coreneuron_x86_gpu
+cmake $BASE_DIR/sources/CoreNeuron -DADDITIONAL_MECHPATH=`pwd`/mod -DCMAKE_C_FLAGS:STRING="-O2" -DCMAKE_CXX_FLAGS:STRING="-O2" -DCOMPILE_LIBRARY_TYPE=STATIC -DCUDA_HOST_COMPILER=`which gcc` -DCUDA_PROPAGATE_HOST_FLAGS=OFF -DENABLE_SELECTIVE_GPU_PROFILING=ON -DENABLE_OPENACC=ON
+make VERBOSE=1 -j
+```
+
+Note that the CUDA version should be compatible with PGI compiler. Otherwise you have to add extra C/C++ flags through CMake. For example, If we are using CUDA 7.5 but PGI default target is CUDA 7.0 then we add :
+
+```bash
+-DCMAKE_C_FLAGS:STRING="-O2 -ta=tesla:cuda7.5" -DCMAKE_CXX_FLAGS:STRING="-O2 -ta=tesla:cuda7.5"
+```
+
 
 ## Running Parallel Simulations
 
@@ -344,6 +368,23 @@ UNITS {
 
 This means you haven't set `MODLUNIT` environment variable. See Installation section.
 
+###### If you see below error :
+
+```
+hoc.HocObject' has no attribute 'nrnbbcore_write
+```
+
+This means you are using older version of NEURON which doesn't support CoreNEURON. Download latest version from Github and compiler from source.
+
+###### If you see below error :
+
+```
+Assertion failed: file nrnpy_nrn.cpp, line XXXX
+/Users/wchen/coreneuron_tutorial/install/x86_64/bin/nrniv: sym && sym->type == RANGEVAR
+```
+
+Most likely multiple incompatible versions of NEURON are installed. Set `PYTHONPATH` or `LD_LIBRARY_PATH` correctly.
+
 ###### If you see compilation / runtime errors
 
 Some models (MOD files) need slight modifications if they are using certain constructs (e.g. use of **POINTER** variables). We will be happy to have a look and help you get started. Send an email to Michael Hines and Pramod Kumbhar.
@@ -359,6 +400,8 @@ Here are some additional points if you want to compare performance between NEURO
 ```
 mpirun -n 4 ./x86_64/special -mpi -python ringtest.py -tstop 100 -coredat coreneuron_data -nring 1024 -ncell 128 -branch 32 64
 ```
+
+Note that this network model uses `hh`, `passive` and `ExpSyn` channels. Even we build larger model, `hh` channel is only inserted into soma and hence total computational complexity remains low.
 
 See command line arguments for more information about arguments :
 
@@ -388,3 +431,34 @@ optional arguments:
   -coredathash   append argument's hash as a sub-directory to coredat
                  directory
 ```
+
+##### Sample Performance Test
+
+In order to compare the performance of NEURON and CoreNEURON, we compiled both simulators using Intel compilers. Note that the ringtest is not `ideal` for benchmarking due to low comutational complexity. Here are execution timings for running test on single core :
+
+```bash
+
+# NEURON CPU Run
+$ ./x86_64/special -python ringtest.py -tstop 10 -coredat coreneuron_data -nring 128 -ncell 128 -branch 32 64
+.........
+runtime=174.74  load_balance=100.0%  avg_comp_time=174.746
+.......
+
+# CoreNEURON CPU Run
+$ export OMP_NUM_THREADS=1
+$ ./coreneuron_x86_cpu/bin/coreneuron_exec -e 10 -d coreneuron_data
+.........
+Solver Time : 78.0866
+.........
+
+# CoreNEURON GPU Run
+$ ./coreneuron_x86_gpu/bin/coreneuron_exec -e 10 -d coreneuron_data --gpu --cell_permute=1
+..........
+Solver Time : 22.7115
+..........
+```
+
+For above test the execution time is reduced from 174sec to 78sec for CPU and to 22.7sec for GPU. This speedup is still less than expected due to lower computational complexity of the model. (With the vectorization and efficient memory layout, we ideally expect about 4x speedup). Try with your model and if you see any performance issues, let us know.
+
+> NOTE : Apart from execution time speedup, major advantage of CoreNEURON is reduction in memory usage. Depending upon model, CoreNEURON could run simulation with 5-7x less memory than NEURON.
+
