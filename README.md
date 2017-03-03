@@ -401,8 +401,6 @@ Here are some additional points if you want to compare performance between NEURO
 mpirun -n 4 ./x86_64/special -mpi -python ringtest.py -tstop 100 -coredat coreneuron_data -nring 1024 -ncell 128 -branch 32 64
 ```
 
-Note that this network model uses `hh`, `passive` and `ExpSyn` channels. Even we build larger model, `hh` channel is only inserted into soma and hence total computational complexity remains low.
-
 See command line arguments for more information about arguments :
 
 ```
