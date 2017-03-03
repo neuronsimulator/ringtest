@@ -177,7 +177,7 @@ Similar to `special` in NEURON, we have to build CoreNEURON executable:
 ```bash
 cd $SOURCE_DIR/ringtest
 mkdir -p coreneuron_x86 && cd coreneuron_x86
-cmake $BASE_DIR/sources/CoreNeuron -DADDITIONAL_MECHPATH=`pwd`/mod
+cmake $BASE_DIR/sources/CoreNeuron -DADDITIONAL_MECHPATH=$SOURCE_DIR/ringtest/mod
 make -j
 ```
 
@@ -257,7 +257,7 @@ nrnivmodl mod
 # build coreneuron executable
 cd $SOURCE_DIR/ringtest
 mkdir -p coreneuron_x86 && cd coreneuron_x86
-cmake $BASE_DIR/sources/CoreNeuron -DADDITIONAL_MECHPATH=`pwd`/mod
+cmake $BASE_DIR/sources/CoreNeuron -DADDITIONAL_MECHPATH=$SOURCE_DIR/ringtest/mod
 make -j
 
 
@@ -288,7 +288,7 @@ export CXX=mpicxx
 
 cd $SOURCE_DIR/ringtest
 mkdir -p coreneuron_x86_gpu && cd coreneuron_x86_gpu
-cmake $BASE_DIR/sources/CoreNeuron -DADDITIONAL_MECHPATH=`pwd`/mod -DCMAKE_C_FLAGS:STRING="-O2" -DCMAKE_CXX_FLAGS:STRING="-O2" -DCOMPILE_LIBRARY_TYPE=STATIC -DCUDA_HOST_COMPILER=`which gcc` -DCUDA_PROPAGATE_HOST_FLAGS=OFF -DENABLE_SELECTIVE_GPU_PROFILING=ON -DENABLE_OPENACC=ON
+cmake $BASE_DIR/sources/CoreNeuron -DADDITIONAL_MECHPATH=$SOURCE_DIR/ringtest/mod -DCMAKE_C_FLAGS:STRING="-O2" -DCMAKE_CXX_FLAGS:STRING="-O2" -DCOMPILE_LIBRARY_TYPE=STATIC -DCUDA_HOST_COMPILER=`which gcc` -DCUDA_PROPAGATE_HOST_FLAGS=OFF -DENABLE_SELECTIVE_GPU_PROFILING=ON -DENABLE_OPENACC=ON
 make VERBOSE=1 -j
 ```
 
