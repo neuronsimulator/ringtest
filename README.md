@@ -41,7 +41,7 @@ Below are additional package dependecies :
 * [CMake 2.8.12+](https://cmake.org) (3.5 for GPU systems)
 * [MPI 2.0+](http://mpich.org) [optional, for parallel simulations]
 * [PGI OpenACC Compiler >=16.3](https://www.pgroup.com/resources/accel.htm) [optional, for GPU systems]
-* [CUDA >=6.0](https://developer.nvidia.com/cuda-toolkit-60) [optional, for GPU systems]
+* [CUDA Toolkit >=6.0](https://developer.nvidia.com/cuda-toolkit-60) [optional, for GPU systems]
 
 
 Here are github repositories:
@@ -292,12 +292,17 @@ cmake $BASE_DIR/sources/CoreNeuron -DADDITIONAL_MECHPATH=$SOURCE_DIR/ringtest/mo
 make VERBOSE=1 -j
 ```
 
-Note that the CUDA version should be compatible with PGI compiler. Otherwise you have to add extra C/C++ flags through CMake. For example, If we are using CUDA 7.5 but PGI default target is CUDA 7.0 then we add :
+Note that the CUDA Toolkit version should be compatible with PGI compiler installed on your system. Otherwise you have to add extra C/C++ flags. For example, if we are using CUDA Toolkit 7.5 installation but PGI default target is CUDA 7.0 then we have to add :
 
 ```bash
 -DCMAKE_C_FLAGS:STRING="-O2 -ta=tesla:cuda7.5" -DCMAKE_CXX_FLAGS:STRING="-O2 -ta=tesla:cuda7.5"
 ```
 
+CoreNEURON uses Random123 library written in CUDA. As we are **not using `NrnRandom123`** in ringtest model, if you see issues with CUDA compilation/linking (or CUDA Toolkit is not installed on your system), you can disable CUDA dependency by adding CMake option `-DENABLE_CUDA_MODULES=OFF` :
+
+```bash
+cmake $BASE_DIR/sources/CoreNeuron -DADDITIONAL_MECHPATH=$SOURCE_DIR/ringtest/mod -DCMAKE_C_FLAGS:STRING="-O2" -DCMAKE_CXX_FLAGS:STRING="-O2" -DCOMPILE_LIBRARY_TYPE=STATIC -DENABLE_OPENACC=ON -DENABLE_CUDA_MODULES=OFF
+```
 
 ## Running Parallel Simulations
 
