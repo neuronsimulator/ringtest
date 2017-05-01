@@ -100,7 +100,7 @@ class Ring(object):
     #Instrumentation - stimulation and recording
     def mkstim(self):
 
-        if not settings.pc.gid_exists(0):
+        if not settings.pc.gid_exists(self.gidstart):
             return
 
         self.stim = h.NetStim()
