@@ -66,6 +66,9 @@ parser.add_argument("-gap", action='store_true', help="use gap junctions", defau
 
 parser.add_argument("-nt", metavar='N', help="nthread", type=int, default=1)
 
+parser.add_argument("-multisplit", action='store_true', default=False,
+                   help="intra-rank thread balance. All pieces of cell on same rank.")
+
 parser.add_argument("-coredat",
                     metavar='path',
                     help="folder for bbcorewrite hashname folders (default coredat)",

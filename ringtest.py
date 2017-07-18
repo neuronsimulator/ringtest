@@ -101,6 +101,13 @@ def prun(tstop):
 
     return runtime, load_balance, avg_comp_time, spk_time, gap_time
 
+def multisplit():
+    h.load_file("parcom.hoc")
+    parcom = h.ParallelComputeTool()
+    parcom.multisplit(1)
+    if settings.rank == 0:
+        lb = parcom.lb
+        print ('multisplit rank 0: %d pieces  Load imbalance %.1f%%' % (lb.npiece, (lb.thread_cxbal_ -1)*100))
 
 if __name__ == '__main__':
 
@@ -158,6 +165,9 @@ if __name__ == '__main__':
     if settings.rank == 0:
         print "%d non-zero area compartments" % ns
 
+    if args.multisplit:
+        multisplit()
+
     if args.show:
         h.topology()
 
@@ -178,9 +188,9 @@ if __name__ == '__main__':
     timeit("initialized", settings.rank)
 
     # write intermediate dataset for coreneuron
-    pc.nrnbbcore_write(bbcorewrite_folder)
-
-    timeit("wrote coreneuron data", settings.rank)
+    if args.multisplit is False:
+        pc.nrnbbcore_write(bbcorewrite_folder)
+        timeit("wrote coreneuron data", settings.rank)
 
     # run simulation with NEURON
     # note that if you want to use CoreNEURON then you don't have to run with NEURON
