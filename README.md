@@ -127,7 +127,7 @@ Now we will start building the `ringtest` model. Clone the github repository as:
 ```bash
 cd $SOURCE_DIR
 git clone https://github.com/pramodk/ringtest.git
-cd ringtest && git checkout tutorial
+cd ringtest
 ```
 
 This repository contains a `mod` sub-directory which has MOD files (for the gap-junction related test). Using the standard NEURON workflow, we can build a `special` executable using `nrnivmodl` as:
@@ -248,10 +248,9 @@ export MODLUNIT=$INSTALL_DIR/share/nrnunits.lib
 # clone ring test
 cd $SOURCE_DIR
 git clone https://github.com/pramodk/ringtest.git
-cd ringtest && git checkout tutorial
 
 # build special executable with neuron
-cd $SOURCE_DIR/ringtest
+cd ringtest
 nrnivmodl mod
 
 # build coreneuron executable
