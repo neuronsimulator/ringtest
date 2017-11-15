@@ -34,11 +34,10 @@ In order to use NEURON and CoreNEURON together we have to download following rep
 
 * [NEURON](https://github.com/nrnhines/nrn)
 * [CoreNEURON](https://github.com/BlueBrain/CoreNeuron)
-* [MOD2C](http://github.com/BlueBrain/mod2c)
 
 Below are additional package dependecies :
 
-* [CMake 2.8.12+](https://cmake.org) (3.5 for GPU systems)
+* [CMake 3+](https://cmake.org) (3.5 for GPU systems)
 * [MPI 2.0+](http://mpich.org) [optional, for parallel simulations]
 * [PGI OpenACC Compiler >=16.3](https://www.pgroup.com/resources/accel.htm) [optional, for GPU systems]
 * [CUDA Toolkit >=6.0](https://developer.nvidia.com/cuda-toolkit-60) [optional, for GPU systems]
@@ -48,7 +47,6 @@ Here are github repositories:
 
 ```bash
 https://github.com/BlueBrain/CoreNeuron.git
-https://github.com/BlueBrain/mod2c.git
 https://github.com/nrnhines/nrn.git
 ```
 
@@ -67,7 +65,7 @@ sed -i -e 's/TABLE minf/:TABLE minf/g' src/nrnoc/hh.mod
 
 ##### Installation
 
-Once you clone the repositories and made the above mentioned changes, you can install NEURON, MOD2C and CoreNEURON as described below. Make sure to have MPI installed (or in $PATH) if you want to enable the parallel version.
+Once you clone the repositories and made the above mentioned changes, you can install NEURON and CoreNEURON as described below. Make sure to have MPI installed (or in $PATH) if you want to enable the parallel version.
 
 > NOTE : full installation script is provided at the end of this section.
 
@@ -86,8 +84,7 @@ Clone repositories as:
 
 ```bash
 cd $SOURCE_DIR
-git clone https://github.com/BlueBrain/CoreNeuron.git
-git clone https://github.com/BlueBrain/mod2c.git
+git clone --recursive https://github.com/BlueBrain/CoreNeuron.git
 git clone https://github.com/nrnhines/nrn.git
 ```
 
@@ -105,22 +102,12 @@ make && make install
 ```
 For more information see [instructions](http://neuron.yale.edu/neuron/download/getdevel) on [neuron.yale.edu](http://neuron.yale.edu/neuron/).
 
-
-###### Install MOD2C
-
-```bash
-cd $SOURCE_DIR/mod2c
-mkdir -p build && cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR
-make && make install
-```
-
-Once above packages are installed, be sure to set `PATH` and `MODLUNIT` environmental variables:
+Once NEURON is installed, be sure to set `PATH`:
 
 ```
 export PATH=$INSTALL_DIR/x86_64/bin:$INSTALL_DIR/bin:$PATH
-export MODLUNIT=$INSTALL_DIR/share/nrnunits.lib
 ```
+
 
 Now we will start building the `ringtest` model. Clone the github repository as:
 
@@ -223,8 +210,7 @@ mkdir -p $INSTALL_DIR $SOURCE_DIR
 # clone repositories
 
 cd $SOURCE_DIR
-git clone https://github.com/BlueBrain/CoreNeuron.git
-git clone https://github.com/BlueBrain/mod2c.git
+git clone --recursive https://github.com/BlueBrain/CoreNeuron.git
 git clone https://github.com/nrnhines/nrn.git
 
 # install neuron
@@ -235,19 +221,12 @@ sed -i -e 's/TABLE minf/:TABLE minf/g' src/nrnoc/hh.mod
 ./configure --prefix=$INSTALL_DIR --without-iv --with-paranrn --with-nrnpython=`which python`
 make -j && make install
 
-# install mod2c
-cd $SOURCE_DIR/mod2c
-mkdir -p build && cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR
-make -j && make install
-
 # set path
 export PATH=$INSTALL_DIR/x86_64/bin:$INSTALL_DIR/bin:$PATH
-export MODLUNIT=$INSTALL_DIR/share/nrnunits.lib
 
 # clone ring test
 cd $SOURCE_DIR
-git clone https://github.com/pramodk/ringtest.git
+git clone https://github.com/nrnhines/ringtest.git
 
 # build special executable with neuron
 cd ringtest
