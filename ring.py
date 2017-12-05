@@ -24,7 +24,7 @@ class Ring(object):
 
         # show number of cells created
         import sys
-        print "%d\r" % Ring.counter,
+        print("%d\r" % Ring.counter)
         sys.stdout.flush()
 
 

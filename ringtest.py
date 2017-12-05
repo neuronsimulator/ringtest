@@ -60,14 +60,14 @@ pc = h.ParallelContext()
 pc.nthread(args.nt, 1)
 
 if settings.rank == 0:
-    print nbranch, ncompart
-    print "nring=%d\ncell per ring=%d\nncell_per_type=%d" % (nring, ncell, ncell_per_type)
-    print "ntype=%d" % ntype
+    print(nbranch, ncompart)
+    print("nring=%d\ncell per ring=%d\nncell_per_type=%d" % (nring, ncell, ncell_per_type))
+    print("ntype=%d" % ntype)
 
 #from cell import BallStick
 h.load_file("cell.hoc")
 
-typecellcnt = [[i, 0] for i in range(ntype)]
+typecellcnt = [[i, 0] for i in range(int(ntype))]
 
 
 
@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
         mkdir_p(bbcorewrite_folder)
 
-        print 'created', bbcorewrite_folder
+        print('created', bbcorewrite_folder)
 
         f = open(args.coredat + '/dict', "a")
         f.write(str(arghash) + ' : "' + str(args) + '"\n')
@@ -163,7 +163,7 @@ if __name__ == '__main__':
     ns = pc.allreduce(ns, 1)
 
     if settings.rank == 0:
-        print "%d non-zero area compartments" % ns
+        print("%d non-zero area compartments" % ns)
 
     if args.multisplit:
         multisplit()

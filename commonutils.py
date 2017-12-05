@@ -14,7 +14,7 @@ def mkdir_p(path):
 def voltageout(foldername, recordlist):
     for vec in recordlist:
         #print only last recorded
-        print vec.label(), vec.x[int(vec.size()) - 1]
+        print(vec.label(), vec.x[int(vec.size()) - 1])
         #vec.printf()
 
 
@@ -97,7 +97,7 @@ def timeit(message, rank):
     else:
         x = h.startsw()
         if rank == 0:
-            print '%gs %s' % ((x - _timeit), message)
+            print('%gs %s' % ((x - _timeit), message))
         _timeit = x
 
 
