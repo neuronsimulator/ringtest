@@ -48,4 +48,5 @@ def cellran(gid, nclist):
       nc.weight[0] *= r.repick()
       nc.delay *= r.repick()
 
+  pc.threshold(gid, pc.threshold(gid) + r.uniform(-9, 0))
 
