@@ -64,6 +64,8 @@ parser.add_argument("-show", action='store_true', help="show type topologies", d
 
 parser.add_argument("-gap", action='store_true', help="use gap junctions", default=False)
 
+parser.add_argument("-runcn", action='store_true', help="run embedded coreneuron", default=False)
+
 parser.add_argument("-nt", metavar='N', help="nthread", type=int, default=1)
 
 parser.add_argument("-multisplit", action='store_true', default=False,

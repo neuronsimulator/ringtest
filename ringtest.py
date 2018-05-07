@@ -189,8 +189,14 @@ if __name__ == '__main__':
 
     # write intermediate dataset for coreneuron
     if args.multisplit is False:
-        pc.nrnbbcore_write(bbcorewrite_folder)
-        timeit("wrote coreneuron data", settings.rank)
+        # test of direct embedded coreneuron simulation
+        if args.runcn is True:
+          pc.nrncore_run()
+          timeit("embedded coreneuron", settings.rank)
+          quit()
+        else:
+          pc.nrnbbcore_write(bbcorewrite_folder)
+          timeit("wrote coreneuron data", settings.rank)
 
     # run simulation with NEURON
     # note that if you want to use CoreNEURON then you don't have to run with NEURON
