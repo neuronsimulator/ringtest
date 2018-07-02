@@ -71,7 +71,7 @@ def spikeout(folder):
     nhost = int(pc.nhost())
 
     pc.barrier()
-    
+
     fname = folder + '/spk%d.std' % nhost
 
     if rank == 0:
@@ -163,10 +163,10 @@ def setup_nrnbbcore_register_mapping(rings):
                         recordlist.append(v)
                     isec += 1
 
-        #register soma section list
-        pc.nrnbbcore_register_mapping(gid, "soma", somasec, somaseg)
+                #register soma section list
+                pc.nrnbbcore_register_mapping(gid, "soma", somasec, somaseg)
 
-        #register dend section list
-        pc.nrnbbcore_register_mapping(gid, "dend", densec, denseg)
+                #register dend section list
+                pc.nrnbbcore_register_mapping(gid, "dend", densec, denseg)
 
     return recordlist
