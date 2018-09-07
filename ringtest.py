@@ -34,7 +34,7 @@ secseg_mapping = args.secmapping
 
 # number of distinct cell types (same branching and compartments)
 # each cell has random type [0:ntype]
-ntype = (nring * ncell - 1) / ncell_per_type + 1
+ntype = int((nring * ncell - 1) / ncell_per_type + 1)
 
 from ring import *
 from neuron import h
@@ -60,9 +60,9 @@ pc = h.ParallelContext()
 pc.nthread(args.nt, 1)
 
 if settings.rank == 0:
-    print nbranch, ncompart
-    print "nring=%d\ncell per ring=%d\nncell_per_type=%d" % (nring, ncell, ncell_per_type)
-    print "ntype=%d" % ntype
+    print ("%s %s" % (str(nbranch), str(ncompart)))
+    print ("nring=%d\ncell per ring=%d\nncell_per_type=%d" % (nring, ncell, ncell_per_type))
+    print ("ntype=%d" % ntype)
 
 #from cell import BallStick
 h.load_file("cell.hoc")
@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
         mkdir_p(bbcorewrite_folder)
 
-        print 'created', bbcorewrite_folder
+        print ('created %s' % bbcorewrite_folder)
 
         f = open(args.coredat + '/dict', "a")
         f.write(str(arghash) + ' : "' + str(args) + '"\n')
@@ -163,7 +163,7 @@ if __name__ == '__main__':
     ns = pc.allreduce(ns, 1)
 
     if settings.rank == 0:
-        print "%d non-zero area compartments" % ns
+        print ("%d non-zero area compartments" % ns)
 
     if args.multisplit:
         multisplit()
