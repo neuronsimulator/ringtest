@@ -191,7 +191,7 @@ if __name__ == '__main__':
     if args.multisplit is False:
         # test of direct embedded coreneuron simulation
         if args.runcn is True:
-          pc.nrncore_run()
+          pc.nrncore_run(tstop)
           timeit("embedded coreneuron", settings.rank)
           quit()
         else:
