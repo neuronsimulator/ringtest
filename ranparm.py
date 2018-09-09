@@ -25,7 +25,7 @@ def cellran(gid, nclist):
           sz = ms.name(varname, i)
           n = varname[0]
           x = seg.__getattribute__(n)
-          seg.__setattr__(n, x * r.repick())
+          setattr(seg, n, x * r.repick())
           #print n, seg.__getattribute__(n)
 
       #point process parameters
@@ -39,7 +39,7 @@ def cellran(gid, nclist):
           varname = h.ref("")
           ms.name(varname, i)
           x = p.__getattribute__(varname[0])
-          p.__setattr__(varname[0], x * r.repick())
+          setattr(p, varname[0], x * r.repick())
           #print varname[0], p.__getattribute__(varname[0])
   
   #netcons targeting the cell
