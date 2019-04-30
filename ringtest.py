@@ -91,7 +91,10 @@ def prun(tstop):
 
     avg_comp_time = pc.allreduce(computation_time, 1) / settings.nhost
 
-    load_balance = avg_comp_time / max_cw_time
+    if max_cw_time == 0:
+        load_balance = 0
+    else:
+        load_balance = avg_comp_time / max_cw_time
 
     # spike communication time
     spk_time = (pc.allreduce(wait, 2), pc.allreduce(wait, 3))
