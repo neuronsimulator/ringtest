@@ -85,7 +85,9 @@ Clone repositories as:
 ```bash
 cd $SOURCE_DIR
 git clone --recursive https://github.com/BlueBrain/CoreNeuron.git
+cd CoreNeuron && git checkout 0.16 && cd -
 git clone https://github.com/nrnhines/nrn.git
+cd nrn && git checkout 7.7.1 && cd -
 ```
 
 ###### Install NEURON
