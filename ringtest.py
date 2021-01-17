@@ -125,7 +125,7 @@ if __name__ == '__main__':
 
     # only master rank creates directory and write hash dict
     # to file that records the args associated with the folder
-    if settings.rank is 0:
+    if settings.rank == 0:
 
         mkdir_p(bbcorewrite_folder)
 
