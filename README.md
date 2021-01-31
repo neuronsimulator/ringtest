@@ -41,7 +41,7 @@ As described in the [documentation here](https://github.com/neuronsimulator/nrn/
 ```python
 h.cvode.cache_efficient(1)
 if use_coreneuron:
-	from neuron import coreneuron
+    from neuron import coreneuron
     coreneuron.enable = True
     coreneuron.gpu = coreneuron_gpu
 ```
