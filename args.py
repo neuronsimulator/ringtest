@@ -54,31 +54,25 @@ parser.add_argument("-rparm",
                     help="randomize parameters",
                     default=False)
 
-parser.add_argument("-secmapping",
-                    dest='secmapping',
+parser.add_argument("-filemode",
+                    dest='filemode',
                     action='store_true',
-                    help="store section segment mapping",
+                    help="Run CoreNEURON with file mode",
+                    default=False)
+
+parser.add_argument("-gpu",
+                    dest='gpu',
+                    action='store_true',
+                    help="Run CoreNEURON on GPU",
                     default=False)
 
 parser.add_argument("-show", action='store_true', help="show type topologies", default=False)
 
 parser.add_argument("-gap", action='store_true', help="use gap junctions", default=False)
 
-parser.add_argument("-runcn", action='store_true', help="run embedded coreneuron", default=False)
+parser.add_argument("-coreneuron", action='store_true', help="run coreneuron", default=False)
 
 parser.add_argument("-nt", metavar='N', help="nthread", type=int, default=1)
 
 parser.add_argument("-multisplit", action='store_true', default=False,
                    help="intra-rank thread balance. All pieces of cell on same rank.")
-
-parser.add_argument("-coredat",
-                    metavar='path',
-                    help="folder for bbcorewrite hashname folders (default coredat)",
-                    default='coredat')
-
-#option to remove hash from coredat directory
-parser.add_argument('-coredathash',
-                    dest='appendhash',
-                    action='store_true',
-                    help="append argument's hash as a sub-directory to coredat directory",
-                    default=False)
