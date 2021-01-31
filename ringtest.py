@@ -1,5 +1,6 @@
 from args import *
 
+# parse CLI arguments
 args, unknown = parser.parse_known_args()
 
 # number of rings
@@ -26,15 +27,21 @@ tstop = args.tstop
 # whether to randomize cell parameters
 randomize_parameters = args.rparm
 
-# whether to create data disrectory with some hash name
-appendhash = args.appendhash
-
-# whether to dump section-segment mapping
-secseg_mapping = args.secmapping
-
 # number of distinct cell types (same branching and compartments)
 # each cell has random type [0:ntype]
 ntype = int((nring * ncell - 1) / ncell_per_type + 1)
+
+# whether to run via in-memory transfer mode or file mode
+# Of filemode is true then model is dumped to file and then
+# passed to coreneuron. In in-memory mode model is passed to
+# coreneuron via in-memory copy.
+coreneuron_file_mode = args.filemode
+
+# whether to run coreneuron or neuron
+use_coreneuron = args.coreneuron
+
+# whether to run coreneuron on GPU
+coreneuron_gpu = args.gpu
 
 from ring import *
 from neuron import h
@@ -44,12 +51,11 @@ import settings
 # initialize global variables
 settings.init(usegap, nring)
 
-
 # note that if branching is small and variation of nbranch and ncompart
 # is small then not all types may have distinct topologies
 # CoreNEURON will print number of distinct topologies.
 
-
+# initialize seed
 h.Random().Random123_globalindex(args.gran)
 
 h.load_file('stdgui.hoc')
@@ -70,9 +76,16 @@ h.load_file("cell.hoc")
 typecellcnt = [[i, 0] for i in range(ntype)]
 
 
+def multisplit():
+    h.load_file("parcom.hoc")
+    parcom = h.ParallelComputeTool()
+    parcom.multisplit(1)
+    if settings.rank == 0:
+        lb = parcom.lb
+        print ('multisplit rank 0: %d pieces  Load imbalance %.1f%%' % (lb.npiece, (lb.thread_cxbal_ -1)*100))
+
 
 def prun(tstop):
-
     runtime = h.startsw()
     wait = pc.wait_time()
 
@@ -104,39 +117,10 @@ def prun(tstop):
 
     return runtime, load_balance, avg_comp_time, spk_time, gap_time
 
-def multisplit():
-    h.load_file("parcom.hoc")
-    parcom = h.ParallelComputeTool()
-    parcom.multisplit(1)
-    if settings.rank == 0:
-        lb = parcom.lb
-        print ('multisplit rank 0: %d pieces  Load imbalance %.1f%%' % (lb.npiece, (lb.thread_cxbal_ -1)*100))
 
 if __name__ == '__main__':
 
-    # hash of the arguments for unique directory name
-    arghash = str(args).__hash__() & 0xffffffffff
-
-    # unique folder to write data for coreneuron
-    if appendhash:
-        bbcorewrite_folder = args.coredat + '/' + str(arghash)
-    else:
-        bbcorewrite_folder = args.coredat + '/'
-
-    # only master rank creates directory and write hash dict
-    # to file that records the args associated with the folder
-    if settings.rank == 0:
-
-        mkdir_p(bbcorewrite_folder)
-
-        print ('created %s' % bbcorewrite_folder)
-
-        f = open(args.coredat + '/dict', "a")
-        f.write(str(arghash) + ' : "' + str(args) + '"\n')
-        f.close()
-
-    # wait for master to create directory
-    pc.barrier()
+    ## Create all rings ##
 
     timeit(None, settings.rank)
 
@@ -157,16 +141,26 @@ if __name__ == '__main__':
                     cellran(gid, ring.nclist)
         timeit("randomized parameters", settings.rank)
 
+
+    ## CoreNEURON setting ##
+
     h.cvode.cache_efficient(1)
 
-    # count total number of segments / compartments
-    ns = 0
-    for sec in h.allsec():
-        ns += sec.nseg
-    ns = pc.allreduce(ns, 1)
+    if use_coreneuron:
+        from neuron import coreneuron
+        coreneuron.enable = True
+        coreneuron.file_mode = coreneuron_file_mode
+        coreneuron.gpu = coreneuron_gpu
 
-    if settings.rank == 0:
-        print ("%d non-zero area compartments" % ns)
+        if args.multisplit is True:
+            print("Error: multi-split is not supported with CoreNEURON\n")
+            quit()
+
+    ## Record spikes ##
+
+    spike_record()
+
+    ## Various CLI options ##
 
     if args.multisplit:
         multisplit()
@@ -174,54 +168,31 @@ if __name__ == '__main__':
     if args.show:
         h.topology()
 
-
-    spike_record()
-
     if usegap:
         pc.setup_transfer()
 
-    # register section segment list
-    if secseg_mapping:
-        recordlist = setup_nrnbbcore_register_mapping(rings)
+    ## Initialize ##
 
     pc.set_maxstep(10)
-
     h.stdinit()
-
     timeit("initialized", settings.rank)
 
-    # write intermediate dataset for coreneuron
-    if args.multisplit is False:
-        # test of direct embedded coreneuron simulation
-        if args.runcn is True:
-          pc.nrncore_run("-e %g" % tstop)
-          timeit("embedded coreneuron", settings.rank)
-          quit()
-        else:
-          pc.nrnbbcore_write(bbcorewrite_folder)
-          timeit("wrote coreneuron data", settings.rank)
+    ##  Run simulation ##
 
-    # run simulation with NEURON
-    # note that if you want to use CoreNEURON then you don't have to run with NEURON
     runtime, load_balance, avg_comp_time, spk_time, gap_time = prun(tstop)
-
     timeit("run", settings.rank)
 
-    # write spike raster
-    spikeout(bbcorewrite_folder)
+    ## Write spike raster ##
 
-    # print voltage recordings
-    # if secseg_mapping:
-    #    voltageout(bbcorewrite_folder, recordlist)
+    spikeout(".")
 
+    ## Print stats ##
+
+    pc.barrier()
     if settings.rank == 0:
-
         print("runtime=%g  load_balance=%.1f%%  avg_comp_time=%g" %
               (runtime, load_balance * 100, avg_comp_time))
         print("spk_time max=%g min=%g" % (spk_time[0], spk_time[1]))
         print("gap_time max=%g min=%g" % (gap_time[0], gap_time[1]))
-
-    if settings.nhost > 1:
-        pc.barrier()
 
     h.quit()
