@@ -60,6 +60,12 @@ parser.add_argument("-filemode",
                     help="Run CoreNEURON with file mode",
                     default=False)
 
+parser.add_argument("-dumpmodel",
+                    dest='dumpmodel',
+                    action='store_true',
+                    help="Dump in memory model to file to coredat directory",
+                    default=False)
+
 parser.add_argument("-gpu",
                     dest='gpu',
                     action='store_true',

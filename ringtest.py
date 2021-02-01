@@ -177,6 +177,13 @@ if __name__ == '__main__':
     h.stdinit()
     timeit("initialized", settings.rank)
 
+
+    ## Dump model to file ##
+
+    if args.dumpmodel:
+        pc.nrnbbcore_write("coredat")
+
+
     ##  Run simulation ##
 
     runtime, load_balance, avg_comp_time, spk_time, gap_time = prun(tstop)
