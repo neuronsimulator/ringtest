@@ -11,7 +11,7 @@ For up to date NEURON installation instructions with CoreNEURON, see [documentat
 Once NEURON is installed, and you set `PATH` and `PYTHONPATH` environmental variables then you should be able to do:
 
 ```
-python -c "from neuron import h; from neuron import coreneuron""
+python -c "from neuron import h; from neuron import coreneuron"
 ```
 
 If you get `ImportError` then make sure `PYTHONPATH` is set up correctly and `python` version is same as the one used for NEURON installation.
@@ -36,8 +36,8 @@ This will create `x86_64/special` executable in the `ringtest` directory (where 
 
 ## Make Model CoreNEURON Compatible
 
-As described in the [documentation here](https://github.com/neuronsimulator/nrn/blob/master/docs/coreneuron/how-to/coreneuron.md), one has to make minor modifications to make a model compatible with CoreNEURON. In the `ringtest.py`, the relevant changes are:
-
+As described in the [documentation here](https://github.com/neuronsimulator/nrn/blob/master/docs/coreneuron/how-to/coreneuron.md), one may have to make minor modifications to make a model compatible with CoreNEURON.
+In `ringtest.py`, the relevant changes have already been made:
 ```python
 h.cvode.cache_efficient(1)
 if use_coreneuron:
@@ -45,6 +45,7 @@ if use_coreneuron:
     coreneuron.enable = True
     coreneuron.gpu = coreneuron_gpu
 ```
+so the `-coreneuron` (`use_coreneuron`) and `-gpu` (`coreneuron_gpu`) arguments can be used to enable CoreNEURON.
 
 By using `coreneuron` module, one can enable CoreNEURON as shown above. Note that CoreNEURON requires NEURON's internal data structures to be in cache efficient form and hence the `cvode.cache_efficient(1)` method must be executed prior to initialization of the model i.e. `h.stdinit()`.
 
