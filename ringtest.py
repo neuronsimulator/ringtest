@@ -118,20 +118,16 @@ def prun(tstop):
     return runtime, load_balance, avg_comp_time, spk_time, gap_time
 
 
-if __name__ == '__main__':
-
-    ## Create all rings ##
-
-    timeit(None, settings.rank)
-
+def network():
     # create network / ring of cells
     ran = h.Random()
     ran.Random123(0, 1)
     types = shuffle([i % ntype for i in range(ncell * nring)], ran)
     rings = [Ring(ncell, nbranch, ncompart, i * ncell, types) for i in range(nring)]
 
-    timeit("created rings", settings.rank)
+    return rings
 
+def randomize(rings):
     # randomize parameters if asked
     if randomize_parameters:
         from ranparm import cellran
@@ -139,8 +135,18 @@ if __name__ == '__main__':
             for gid in ring.gids:
                 if pc.gid_exists(gid):
                     cellran(gid, ring.nclist)
-        timeit("randomized parameters", settings.rank)
 
+if __name__ == '__main__':
+
+    ## Create all rings ##
+
+    timeit(None, settings.rank)
+
+    rings = network()
+    timeit("created rings", settings.rank)
+    if randomize_parameters:
+        randomize(rings)    
+        timeit("randomized parameters", settings.rank)
 
     ## CoreNEURON setting ##
 

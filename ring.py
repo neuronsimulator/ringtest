@@ -47,7 +47,7 @@ class Ring(object):
             secpar, segvec = celltypeinfo(type, nbranch, ncompart)
             cell = h.B_BallStick(secpar, segvec)
             self.cells.append(cell)
-            settings.pc.set_gid2node(gid, settings.rank)
+            settings.pc.set_gid2node(gid, settings.pc.id())
             nc = cell.connect2target(None)
             settings.pc.cell(gid, nc)
 
