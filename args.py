@@ -72,6 +72,12 @@ parser.add_argument("-gpu",
                     help="Run CoreNEURON on GPU",
                     default=False)
 
+parser.add_argument('-permute',
+                    metavar='N',
+                    help="permute option for cell topology (default 0)",
+                    type=int,
+                    default=0)
+
 parser.add_argument("-show", action='store_true', help="show type topologies", default=False)
 
 parser.add_argument("-gap", action='store_true', help="use gap junctions", default=False)
