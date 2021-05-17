@@ -43,6 +43,9 @@ use_coreneuron = args.coreneuron
 # whether to run coreneuron on GPU
 coreneuron_gpu = args.gpu
 
+# cell permutation type
+coreneuron_permute = args.permute
+
 from ring import *
 from neuron import h
 from commonutils import *
@@ -151,6 +154,7 @@ if __name__ == '__main__':
         coreneuron.enable = True
         coreneuron.file_mode = coreneuron_file_mode
         coreneuron.gpu = coreneuron_gpu
+        coreneuron.cell_permute = coreneuron_permute
 
         if args.multisplit is True:
             print("Error: multi-split is not supported with CoreNEURON\n")
