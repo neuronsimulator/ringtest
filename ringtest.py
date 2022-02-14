@@ -131,7 +131,8 @@ if __name__ == '__main__':
     ran = h.Random()
     ran.Random123(0, 1)
     types = shuffle([i % ntype for i in range(ncell * nring)], ran)
-    rings = [Ring(ncell, nbranch, ncompart, i * ncell, types) for i in range(nring)]
+    # rings = [Ring(ncell, nbranch, ncompart, i * ncell, types) for i in range(nring)]
+    rings = [HHRing(ncell, 1, i * ncell) for i in range(nring)]
 
     timeit("created rings", settings.rank)
 

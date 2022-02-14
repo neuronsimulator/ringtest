@@ -111,3 +111,89 @@ class Ring(object):
         ncstim.weight[0] = 0.01
         self.nclist.append(ncstim)
 
+
+class HHRing(Ring):
+
+    def __init__(self, ncell, connection_percentage, gidstart):
+
+        self.gids = []
+        self.delay = 1
+        self.ncell = int(ncell)
+        self.gidstart = gidstart
+
+        self.mkring(self.ncell, connection_percentage)
+        self.mkstim()
+
+        Ring.counter += 1
+
+        # show number of cells created
+        import sys
+        sys.stdout.write("%d\r" % Ring.counter)
+        sys.stdout.flush()
+
+
+    def mkring(self, ncell, connection_percentage):
+        self.mkcells(ncell)
+        self.connectcells(ncell, connection_percentage)
+
+
+    def mkcells(self, ncell):
+        self.cells = {}
+
+        for i in range(self.gidstart, ncell + self.gidstart):
+
+            if (i % settings.nhost) != settings.rank:
+                continue
+
+            gid = i
+            self.gids.append(gid)
+            soma = h.Section('soma')
+
+            soma.cm = 1
+            soma.L = 10.0
+            soma.diam = 10.0
+
+            soma.insert('hh')
+            soma.gnabar_hh = 0.1
+            soma.gkbar_hh = 0.035
+
+            self.cells[gid] = soma
+            settings.pc.set_gid2node(gid, settings.rank)
+            nc = h.NetCon(soma(0.5)._ref_v, None, sec=soma)
+            settings.pc.cell(gid, nc)
+
+
+    def mkstim(self):
+        for gid in self.gids:
+
+            if not settings.pc.gid_exists(gid):
+                continue
+
+            iclamp = h.IClamp(settings.pc.gid2cell(gid)(0.5))
+            iclamp.amp = 0.05
+
+            iclamp.delay = 50
+            iclamp.dur = 100
+
+
+    def connectcells(self, ncell, connection_percentage):
+
+        self.nclist = []
+        connections_per_cell = ncell*connection_percentage
+        print("Connections per cell {}".format(connections_per_cell))
+        for gid in self.gids:
+        # not efficient but demonstrates use of settings.pc.gid_exists
+            for i in range(gid, gid+int(connections_per_cell)):
+                if gid != i:
+                    print("Creating connection for sgid {} tgid {}".format(i, gid))
+                    self.mk_con(i, gid)
+
+
+    def mk_con(self, gid, targid):
+
+        if settings.pc.gid_exists(targid):
+            target = self.cells[targid]
+            nc = settings.pc.gid_connect(gid, target)
+            self.nclist.append(nc)
+            nc.delay = self.delay
+            nc.weight[0] = 0.01
