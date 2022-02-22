@@ -46,6 +46,8 @@ class Ring(object):
             self.gids.append(gid)
             secpar, segvec = celltypeinfo(type, nbranch, ncompart)
             cell = h.B_BallStick(secpar, segvec)
+            h.ko0_k_ion = 3.82
+            h.ki0_k_ion = 140
             self.cells.append(cell)
             settings.pc.set_gid2node(gid, settings.rank)
             nc = cell.connect2target(None)
