@@ -6,7 +6,7 @@ This tutorial shows how to build a simple network model using [NEURON](https://w
 
 ## Installation
 
-For up to date NEURON installation instructions with CoreNEURON, see [documentation here](https://github.com/neuronsimulator/nrn/blob/master/docs/coreneuron/how-to/coreneuron.md). As CoreNEURON rely on auto-vectorisation compiler, make sure to use vendor compilers like Intel, Cray, AMD, NVIDIA HPC SDK.
+For up to date NEURON installation instructions with CoreNEURON, see [documentation here](https://github.com/neuronsimulator/nrn/blob/master/docs/coreneuron/installation.rst). As CoreNEURON rely on auto-vectorisation compiler, make sure to use vendor compilers like Intel, Cray, AMD, NVIDIA HPC SDK.
 
 Once NEURON is installed, and you set `PATH` and `PYTHONPATH` environmental variables then you should be able to do:
 
@@ -149,24 +149,23 @@ These steps are typically fast but if you are running a very small model for sho
 For comparison of NEURON and CoreNEURON performance, here are some executions with NEURON and CoreNEURON running on single core:
 
 ```bash
-
 # NEURON CPU Run
 $ mpiexec -n 1 ./x86_64/special -mpi -python ringtest.py -tstop 10 -nring 128 -ncell 128 -branch 32 64
 .........
-runtime=174.74  load_balance=100.0%  avg_comp_time=174.746
+runtime=20.86  load_balance=100.0%  avg_comp_time=20.8548
 .......
 
 # CoreNEURON CPU Run
 $ mpiexec -n 1 ./x86_64/special -mpi -python ringtest.py -tstop 10 -nring 128 -ncell 128 -branch 32 64 -coreneuron
 .........
-Solver Time : 78.0866
+Solver Time : 15.846
 .........
 
 # CoreNEURON GPU Run
 $ mpiexec -n 1 ./x86_64/special -mpi -python ringtest.py -tstop 10 -nring 128 -ncell 128 -branch 32 64 -coreneuron -gpu
 ..........
-Solver Time : 22.7115
+Solver Time : 0.431226
 ..........
 ```
 
-For above test the execution time is reduced from 174sec to 78sec for CPU and to 22.7sec for GPU. This speedup is still less than expected due to lower computational complexity of the model. (With the vectorization and efficient memory layout, we ideally expect about 4x speedup). Try with your model and if you see any performance issues, please open an issue on [NEURON GitHub repository](https://github.com/neuronsimulator/nrn/issues/new).
+For above test the execution time is reduced from 174sec to 78sec for CPU and to 22.7sec for GPU. This speedup is still less than expected due to lower computational complexity of the model. But also note that we are running CPU execution with single core. Make sure to use all CPU resources for actual comparison. Try with your model and if you see any performance issues, please open an issue on [NEURON GitHub repository](https://github.com/neuronsimulator/nrn/issues/new).

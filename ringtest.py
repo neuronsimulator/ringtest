@@ -46,6 +46,10 @@ coreneuron_gpu = args.gpu
 # cell permutation type
 coreneuron_permute = args.permute
 
+# permute type is default 0 for GPU then choose type 2
+if coreneuron_gpu and coreneuron_permute == 0:
+    coreneuron_permute = 2
+
 from ring import *
 from neuron import h
 from commonutils import *
