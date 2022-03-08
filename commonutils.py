@@ -100,3 +100,73 @@ def timeit(message, rank):
             print ('%gs %s' % ((x - _timeit), message))
         _timeit = x
 
+
+# function to register section-segment mapping with bbcore write
+def setup_nrnbbcore_register_mapping(rings):
+
+    #for recording
+    recordlist = []
+
+    #vector for soma sections and segment
+    somasec = h.Vector()
+    somaseg = h.Vector()
+
+    #vector for dendrite sections and segment
+    densec = h.Vector()
+    denseg = h.Vector()
+
+    pc = h.ParallelContext()
+
+    #all rings in the simulation
+    for ring in rings:
+
+        #every gid in the ring
+        for gid in ring.gids:
+
+            #clear previous vector if any
+            somasec.size(0)
+            somaseg.size(0)
+            densec.size(0)
+            denseg.size(0)
+
+            #if gid exist on rank
+            if (pc.gid_exists(gid)):
+
+                #get cell instance
+                cell = pc.gid2cell(gid)
+                isec = 0
+
+                #soma section, only pne
+                for sec in [cell.soma]:
+                    for seg in sec:
+                        #get section and segment index
+                        somasec.append(isec)
+                        somaseg.append(seg.node_index())
+
+                        #vector for recording
+                        v = h.Vector()
+                        v.record(seg._ref_v)
+                        v.label("soma %d %d" % (isec, seg.node_index()))
+                        recordlist.append(v)
+                isec += 1
+
+                #for sections in dendrite
+                for sec in cell.den:
+                    for seg in sec:
+                        densec.append(isec)
+                        denseg.append(seg.node_index())
+
+                        #for recordings
+                        v = h.Vector()
+                        v.record(seg._ref_v)
+                        v.label("dend %d %d" % (isec, seg.node_index()))
+                        recordlist.append(v)
+                    isec += 1
+
+                #register soma section list
+                pc.nrnbbcore_register_mapping(gid, "soma", somasec, somaseg)
+
+                #register dend section list
+                pc.nrnbbcore_register_mapping(gid, "dend", densec, denseg)
+
+    return recordlist
