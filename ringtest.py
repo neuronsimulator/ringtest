@@ -175,6 +175,13 @@ if __name__ == '__main__':
     if usegap:
         pc.setup_transfer()
 
+    # register section/segment mapping
+    if args.dumpmodel:
+        recordlist = setup_nrnbbcore_register_mapping(rings)
+        # NOTE: once simulation finishes, one can print
+        # voltages as below
+        # voltageout("coredat", recordlist)
+
     ## Initialize ##
 
     pc.set_maxstep(10)
