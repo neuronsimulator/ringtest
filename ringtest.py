@@ -104,17 +104,13 @@ def prun(tstop):
     wait = pc.wait_time() - wait
     runtime = h.startsw() - runtime
 
+    # Load balance is average computation time / max computation time
     computation_time = pc.step_time()
 
-    cw_time = computation_time + pc.step_wait()
-    max_cw_time = pc.allreduce(cw_time, 2)
-
     avg_comp_time = pc.allreduce(computation_time, 1) / settings.nhost
+    max_comp_time = pc.allreduce(computation_time, 2)
 
-    if max_cw_time == 0:
-        load_balance = 0
-    else:
-        load_balance = avg_comp_time / max_cw_time
+    load_balance = (avg_comp_time / max_comp_time) if max_comp_time else 0.0
 
     # spike communication time
     spk_time = (pc.allreduce(wait, 2), pc.allreduce(wait, 3))
