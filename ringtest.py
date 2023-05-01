@@ -145,6 +145,12 @@ if __name__ == '__main__':
         timeit("randomized parameters", settings.rank)
 
 
+    ## Load balance? ##
+    if args.loadbal:
+        import loadbal
+        loadbal.act(args)
+        timeit("load balance", settings.rank)
+
     ## CoreNEURON setting ##
 
     h.cvode.cache_efficient(1)

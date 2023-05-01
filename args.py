@@ -88,3 +88,6 @@ parser.add_argument("-nt", metavar='N', help="nthread", type=int, default=1)
 
 parser.add_argument("-multisplit", action='store_true', default=False,
                    help="intra-rank thread balance. All pieces of cell on same rank.")
+
+parser.add_argument("-loadbal", action='store_true', default=False,
+                   help="whole cell mpi and thread balance")
