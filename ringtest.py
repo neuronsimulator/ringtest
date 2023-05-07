@@ -18,6 +18,9 @@ nbranch = args.branch
 # min, max random nseg for each branch
 ncompart = args.compart
 
+# number and size scale of outliers
+outliers = args.outlier
+
 # if use gap junctions
 usegap = args.gap
 
@@ -77,6 +80,7 @@ if settings.rank == 0:
     print ("%s %s" % (str(nbranch), str(ncompart)))
     print ("nring=%d\ncell per ring=%d\nncell_per_type=%d" % (nring, ncell, ncell_per_type))
     print ("ntype=%d" % ntype)
+    print ("outlier %s" % str(outliers))
 
 #from cell import BallStick
 h.load_file("cell.hoc")
@@ -133,6 +137,14 @@ if __name__ == '__main__':
     ran.Random123(0, 1)
     types = shuffle([i % ntype for i in range(ncell * nring)], ran)
     rings = [Ring(ncell, nbranch, ncompart, i * ncell, types) for i in range(nring)]
+
+    # make first outliers[0] cells outliers[1] times larger by increasing nseg
+    for i in range(outliers[0]):
+        if pc.gid_exists(i):
+            cell = pc.gid2cell(i)
+            print(cell)
+            for sec in cell.den:
+                sec.nseg *= outliers[1]
 
     timeit("created rings", settings.rank)
 
