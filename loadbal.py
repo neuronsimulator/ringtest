@@ -27,7 +27,10 @@ def read_exper_mech_complex():
         f.close()
         lb.read_mcomplex()
     except:
-        print('No (valid) mcomplex.dat file. Run "python loadbal.py"')
+        if pc.id() == 0:
+            print(
+                'No (valid) mcomplex.dat file. Using number of state as complexity proxy. Run "python loadbal.py"'
+            )
 
 
 def do_whole_cell_thread_balance():
@@ -54,23 +57,21 @@ def do_whole_cell_thread_balance():
 
 
 def expected_whole_cell_thread_balance():
-    """For the existing thread partitions, what is the expected balance.
-    Actually, until part = pc.partition(ithread) exists, assume
-    round robin distribution of the roots. (I.e. Assume
-    do_whole_cell_thread_balance() has not been called.)
-    """
+    """For the existing thread partitions, what is the expected balance."""
+    h.finitialize()  # make sure thread partitions defined
     nhost = pc.nhost()
     nth = pc.nthread()
     # threads for this rank
     cxpart = [0.0 for _ in range(nth)]
-    sl = h.SectionList()
-    sl.allroots()
+    sl = [pc.get_partition(i) for i in range(nth)]
     cxmax = 0
-    for i, sec in enumerate(sl):
-        cx = lb.cell_complexity(sec=sec)
-        cxpart[i % nth] += cx
-        cxmax = cx if cx > cxmax else cxmax
-    ncell = i + 1
+    ncell = 0
+    for ith, seclist in enumerate(sl):
+        for i, sec in enumerate(seclist):
+            cx = lb.cell_complexity(sec=sec)
+            cxpart[ith] += cx
+            cxmax = cx if cxmax < cx else cxmax
+            ncell += 1
 
     # gather cxpart, etc from all ranks onto rank 0
     info = pc.py_gather((cxpart, cxmax, ncell, nth), 0)
@@ -85,20 +86,20 @@ def expected_whole_cell_thread_balance():
             cxmax = i[1] if cxmax < i[1] else cxmax
             cxpart.extend(i[0])
 
-    print("hello")
-    avgcell = sum(cxpart) / ncell
-    maxcell = cxmax
-    avgpart = sum(cxpart) / nth
-    maxpart = max(cxpart)
-    bal = avgpart / maxpart if maxpart else 1.0
+        avgcell = sum(cxpart) / ncell
+        maxcell = cxmax
+        avgpart = sum(cxpart) / nth
+        maxpart = max(cxpart)
+        bal = avgpart / maxpart if maxpart else 1.0
 
     if pc.id() == 0:
         print(
-            "%d nhost  total %d threads  %d pieces  expected (round-robin) thread balance %.1f%%"
-            % (nhost, nth, ncell, bal * 100)
+            "For existing thread partitions, expected load balance is %.1f%%"
+            % (bal * 100,)
         )
-        print("     cell   complexity average=%g   max=%g" % (avgcell, maxcell))
-        print("     thread complexity average=%g   max=%g" % (avgpart, maxpart))
+        print("    %d nhost  total %d threads  %d pieces" % (nhost, nth, ncell))
+        print("    cell   complexity average=%g   max=%g" % (avgcell, maxcell))
+        print("    thread complexity average=%g   max=%g" % (avgpart, maxpart))
 
 
 def act(args):
@@ -113,6 +114,27 @@ def act(args):
         expected_whole_cell_thread_balance()
         # repartition the threads for loadbalance
         do_whole_cell_thread_balance()
+
+
+def load_balance():
+    # load balance defined as avgtime/maxtime
+    thread_times = [pc.thread_ctime(i) for i in range(pc.nthread())]
+    sum_thread_time = sum(thread_times)
+    max_thread_time = max(thread_times)
+    num_threads = pc.nthread()
+
+    sum_thread_time = pc.allreduce(sum_thread_time, 1)
+    max_thread_time = pc.allreduce(max_thread_time, 2)
+    num_threads = pc.allreduce(num_threads, 1)
+
+    avg_thread_time = sum_thread_time / num_threads
+    ldbal = avg_thread_time / (max_thread_time if max_thread_time else 1.0)
+
+    if pc.id() == 0:
+        print(
+            "%d total threads: bal=%.1f%% avg=%gs max=%gs"
+            % (num_threads, ldbal * 100, avg_thread_time, max_thread_time)
+        )
 
 
 if __name__ == "__main__":

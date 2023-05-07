@@ -54,6 +54,7 @@ from ring import *
 from neuron import h
 from commonutils import *
 import settings
+import loadbal
 
 # initialize global variables
 settings.init(usegap, nring)
@@ -147,7 +148,6 @@ if __name__ == '__main__':
 
     ## Load balance? ##
     if args.loadbal:
-        import loadbal
         loadbal.act(args)
         timeit("load balance", settings.rank)
 
@@ -203,6 +203,7 @@ if __name__ == '__main__':
 
     ##  Run simulation ##
 
+    pc.thread_ctime() # 0 the thread comp times.
     runtime, load_balance, avg_comp_time, spk_time, gap_time = prun(tstop)
     timeit("run", settings.rank)
 
@@ -213,10 +214,12 @@ if __name__ == '__main__':
     ## Print stats ##
 
     pc.barrier()
+    loadbal.load_balance() # thread balance over all ranks
     if settings.rank == 0:
-        print("runtime=%g  load_balance=%.1f%%  avg_comp_time=%g" %
-              (runtime, load_balance * 100, avg_comp_time))
+        print("%d ranks:  load_balance=%.1f%%  avg_comp_time=%g" %
+              (pc.nhost(), load_balance * 100, avg_comp_time))
         print("spk_time max=%g min=%g" % (spk_time[0], spk_time[1]))
         print("gap_time max=%g min=%g" % (gap_time[0], gap_time[1]))
+        print("runtime=%g" % runtime)
 
     h.quit()
