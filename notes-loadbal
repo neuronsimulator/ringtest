@@ -1,0 +1,17 @@
+1) Is the effort to construct a load balanced simulation worth it.
+ Prerequisite: a working simulation.
+ As a concrete example, we use the ringtest on an apple silicon laptop
+   git clone https://github.com/neuronsimulator/ringtest
+   cd ringtest
+   nrnivmodl mod # For the moment, focus on NEURON simulation.
+                 # or else nrnivmodl -coreneuron mod
+   nrniv -python ringtest.py -h # take a look at the options
+   nrniv -python ringtest.py -tstop 1000
+    for this simulation of 16 rings, 8 cells per ring and 16 distinct cell
+    types of cells beteen 10 and 20 sections in size the
+    runtime was 3.5s with 100% loadbalance (only 1 process).
+
+    Trying again with
+   mpiexec -n 6 nrniv -python -mpi ringtest.py -tstop 1000
+    the runtime is 1.35s with 61.6% loadbalance.
+    Ideally we hoped for a runtime of 3.5/6 = 0.58s
