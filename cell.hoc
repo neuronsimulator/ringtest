@@ -8,7 +8,7 @@ public all, den
 
 create soma, dend[1]
 
-objref synlist
+objref synlist, extrasynlist
 
 proc init() {local i
   nden = $o1.size()
@@ -19,6 +19,7 @@ proc init() {local i
   geom()
   biophys()
   synlist = new List()
+  extrasynlist = new List()
   synapses()
   x = y = z = 0 // only change via position
 }

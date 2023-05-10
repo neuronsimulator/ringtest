@@ -18,6 +18,13 @@ nbranch = args.branch
 # min, max random nseg for each branch
 ncompart = args.compart
 
+# min, max random nsyn for each compartment
+# extra synapse are same for each cell type
+# They do not change simulation results because receive no input.
+# Primarily to increase complexity of the cell.
+# 5 synapses are roughly equivalent in complexity to an hh instance.
+nsyn = args.nsyn
+
 # number and size scale of outliers
 outliers = args.outlier
 
@@ -30,13 +37,13 @@ tstop = args.tstop
 # whether to randomize cell parameters
 randomize_parameters = args.rparm
 
-# number of distinct cell types (same branching and compartments)
+# number of distinct cell types (same branching, compartments, and nsyn dist))
 # each cell has random type [0:ntype]
 ntype = int((nring * ncell - 1) / ncell_per_type + 1)
 
 # whether to run via in-memory transfer mode or file mode
-# Of filemode is true then model is dumped to file and then
-# passed to coreneuron. In in-memory mode model is passed to
+# If filemode is true then model is dumped to file and then
+# passed to coreneuron. Otherwise in-memory mode model is passed to
 # coreneuron via in-memory copy.
 coreneuron_file_mode = args.filemode
 
@@ -77,9 +84,14 @@ pc = h.ParallelContext()
 pc.nthread(args.nt, 1)
 
 if settings.rank == 0:
-    print ("%s %s" % (str(nbranch), str(ncompart)))
+    print ("nbranch=%s ncompart=%s nsyn=%s" % (str(nbranch), str(ncompart), str(nsyn)))
     print ("nring=%d\ncell per ring=%d\nncell_per_type=%d" % (nring, ncell, ncell_per_type))
     print ("ntype=%d" % ntype)
+    b,s,e = celltypeinfo(0, nbranch, ncompart, nsyn)
+    b = len(b)
+    s = int(sum(s))
+    e = int(sum(e)) if e is not None else 0
+    print ("type 0 size: branches=%d  segments=%d  extrasynapses=%d"% (b, s, e))
     print ("outlier %s" % str(outliers))
 
 #from cell import BallStick
@@ -136,7 +148,7 @@ if __name__ == '__main__':
     ran = h.Random()
     ran.Random123(0, 1)
     types = shuffle([i % ntype for i in range(ncell * nring)], ran)
-    rings = [Ring(ncell, nbranch, ncompart, i * ncell, types) for i in range(nring)]
+    rings = [Ring(ncell, nbranch, ncompart, nsyn, i * ncell, types) for i in range(nring)]
 
     # make first outliers[0] cells outliers[1] times larger by increasing nseg
     for i in range(outliers[0]):
@@ -199,6 +211,14 @@ if __name__ == '__main__':
         # NOTE: once simulation finishes, one can print
         # voltages as below
         # voltageout("coredat", recordlist)
+
+    if pc.id() == 0:
+        b = s = 0
+        for sec in h.allsec():
+            b += 1
+            s += sec.nseg
+        e = len(h.List("Exp2Syn"))
+        print ("rank 0 size: sections=%d  segments=%d  extrasynapses=%d"% (b, s, e))
 
     ## Initialize ##
 

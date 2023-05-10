@@ -36,6 +36,13 @@ parser.add_argument("-compart",
                     type=int,
                     default=[1, 1])
 
+parser.add_argument("-nsyn",
+                    metavar='N',
+                    nargs=2,
+                    help="extra (unused) synapses per compartment (default [0,0])",
+                    type=int,
+                    default=[0, 0])
+
 parser.add_argument("-outlier",
                     metavar='N',
                     nargs=2,

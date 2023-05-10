@@ -18,7 +18,7 @@ def voltageout(foldername, recordlist):
         #vec.printf()
 
 
-def celltypeinfo(type, nbranch, ncompart):
+def celltypeinfo(type, nbranch, ncompart, nsyn):
 
     r = h.Random()
     r.Random123(type, 2)
@@ -42,8 +42,15 @@ def celltypeinfo(type, nbranch, ncompart):
         else:
             x.append([i, 0])
 
+    nsynvec = None
+    if nsyn[1]:
+        r.discunif(nsyn[0], nsyn[1])
+        nsynvec = h.Vector(sum(segvec))
+        for i in range(len(nsynvec)):
+            nsynvec[i] = int(r.repick())
+
     #print type, secpar.to_python()
-    return secpar, segvec
+    return secpar, segvec, nsynvec
 
 # for nhost independent type for gid
 # shuffle elements of vec

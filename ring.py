@@ -6,7 +6,7 @@ class Ring(object):
 
     counter = 0
 
-    def __init__(self, ncell, nbranch, ncompart, gidstart, types):
+    def __init__(self, ncell, nbranch, ncompart, nsyn, gidstart, types):
 
         if settings.usegap:
             self.sid_dend_start = settings.nring * ncell
@@ -17,7 +17,7 @@ class Ring(object):
         self.ncell = int(ncell)
         self.gidstart = gidstart
 
-        self.mkring(self.ncell, nbranch, ncompart, types)
+        self.mkring(self.ncell, nbranch, ncompart, nsyn, types)
         self.mkstim()
 
         Ring.counter += 1
@@ -28,12 +28,12 @@ class Ring(object):
         sys.stdout.flush()
 
 
-    def mkring(self, ncell, nbranch, ncompart, types):
-        self.mkcells(ncell, nbranch, ncompart, types)
+    def mkring(self, ncell, nbranch, ncompart, nsyn, types):
+        self.mkcells(ncell, nbranch, ncompart, nsyn, types)
         self.connectcells(ncell)
 
 
-    def mkcells(self, ncell, nbranch, ncompart, types):
+    def mkcells(self, ncell, nbranch, ncompart, nsyn, types):
         self.cells = []
 
         for i in range(self.gidstart, ncell + self.gidstart):
@@ -44,12 +44,21 @@ class Ring(object):
             gid = i
             type = types[gid]
             self.gids.append(gid)
-            secpar, segvec = celltypeinfo(type, nbranch, ncompart)
+            secpar, segvec, nsynvec = celltypeinfo(type, nbranch, ncompart, nsyn)
             cell = h.B_BallStick(secpar, segvec)
+            self.add_extra_syn(cell, nsynvec)
             self.cells.append(cell)
             settings.pc.set_gid2node(gid, settings.rank)
             nc = cell.connect2target(None)
             settings.pc.cell(gid, nc)
+
+    def add_extra_syn(self, cell, nsynvec):
+        if nsynvec:
+            i = 0
+            for sec in cell.all:
+                for seg in sec:
+                    for j in range(int(nsynvec[i])):
+                        cell.extrasynlist.append(h.Exp2Syn(seg))
 
     def connectcells(self, ncell):
 
