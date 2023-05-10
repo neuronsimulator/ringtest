@@ -109,28 +109,64 @@ See command line arguments for more information about arguments:
 ```bash
 → python ringtest.py -h
 usage: ringtest.py [-h] [-nring N] [-ncell N] [-npt N] [-branch N N]
-                   [-compart N N] [-tstop float] [-gran N] [-rparm]
-                   [-filemode] [-gpu] [-show] [-gap] [-coreneuron] [-nt N]
-                   [-multisplit]
+                   [-compart N N] [-nsyn N N] [-outlier N N] [-tstop float]
+                   [-gran N] [-rparm] [-filemode] [-dumpmodel] [-gpu]
+                   [-permute N] [-show] [-gap] [-coreneuron] [-nt N]
+                   [-multisplit] [-loadbal]
 
-optional arguments:
+options:
   -h, --help    show this help message and exit
   -nring N      number of rings (default 16)
   -ncell N      number of cells per ring (default 8)
   -npt N        number of cells per type (default 8)
   -branch N N   range of branches per cell (default 10 20)
   -compart N N  range of compartments per branch (default [1,1])
+  -nsyn N N     extra (unused) synapses per compartment (default [0,0])
+  -outlier N N  how many outliers with size scale (default [0,1])
   -tstop float  stop time (ms) (default 100.0)
   -gran N       global Random123 index (default 0)
   -rparm        randomize parameters
   -filemode     Run CoreNEURON with file mode
+  -dumpmodel    Dump in memory model to file to coredat directory
   -gpu          Run CoreNEURON on GPU
+  -permute N    permute option for cell topology (default 0)
   -show         show type topologies
   -gap          use gap junctions
   -coreneuron   run coreneuron
   -nt N         nthread
   -multisplit   intra-rank thread balance. All pieces of cell on same rank.
+  -loadbal      whole cell mpi and thread balance
 ```
+
+Some elaboration
+
+-nsyn min max:
+To increase complexity, -nsyn adds a range of Exp2Syn instances
+to each dendritic compartment. Each Exp2Syn instance adds two states
+to the model and has about 1/5 the complexity of an hh instance. These
+synapses do not have input and affect only simulation time, not results.
+
+-outlier number size_scale:
+To allow for large load imbalance with
+round robin distribution of cells the first number gid's have the nseg
+of each section multiplied by size_scale. Note that this does not increase
+the number of nsyn extra synapses on the cell.
+
+-loadbal:
+If nhost > 1, only prints the expected whole cell thread balance
+Otherwise, prints the rank 0
+    expected default distribution load balance
+    expected Least Processing Time distribution load balance
+    Distributes cells according to the LPT algorithm.
+
+More accurate expected load balance can be obtained by creating
+mcomplex.dat file with
+    python loadbal.py
+If mcomplex.dat exists it will be used to compute the expected relative
+runtime of each cell in the model in order to determine a reasonable
+distribution of cells (or multisplit pieces of cells) on threads.
+
+
 
 ##### Sample Performance Test
 
