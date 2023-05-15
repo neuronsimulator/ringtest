@@ -35,4 +35,5 @@ jobs:
           diff spk1.std reference_data/spk1.100ms.std.ref
           # Test CoreNEURON
           python ringtest.py -coreneuron -tstop 100
-          diff spk1.std reference_data/spk1.100ms.std.ref
+          sortspike spk1.std spk1.coreneuron.std
+          diff spk1.coreneuron.std reference_data/spk1.100ms.std.ref
