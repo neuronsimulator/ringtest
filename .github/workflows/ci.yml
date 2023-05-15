@@ -1,0 +1,41 @@
+name: Check with NEURON wheel
+
+on:
+  push:
+    branches: 
+      # If nothing else, this is important for the ccache logic below...
+      - master
+  pull_request:
+    branches:
+      - master
+
+
+jobs:
+  ci:
+    name: ${{matrix.os}} -- ${{matrix.version}}
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [macOS-12, ubuntu-22.04]
+        version: [neuron, neuron-nightly]
+      fail-fast: false
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Install NEURON
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "${{matrix.version}}"
+      - name: Build .mod files
+        run:  |
+          ls -R
+          nrnivmodl -coreneuron mod/
+      - name: Run ringtest
+        run:  |
+          ls -R
+          python ringtest.py -tstop 100
+          diff spk1.std reference_data/spk1.100ms.std.ref
