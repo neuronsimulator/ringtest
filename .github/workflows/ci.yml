@@ -32,10 +32,8 @@ jobs:
           python -m pip install "${{matrix.version}}"
       - name: Build .mod files
         run:  |
-          ls -R
           nrnivmodl -coreneuron mod/
       - name: Run ringtest
         run:  |
-          ls -R
           python ringtest.py -tstop 100
           diff spk1.std reference_data/spk1.100ms.std.ref
