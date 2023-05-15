@@ -8,11 +8,11 @@ on:
       - master
 jobs:
   ci:
-    name: ${{matrix.os}} - ${{matrix.version}}
+    name: ${{matrix.os}} / ${{matrix.version}}
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
-        os: [macOS-12, ubuntu-22.04]
+        os: [ubuntu-22.04]
         version: [neuron, neuron-nightly]
     timeout-minutes: 5
     steps:
