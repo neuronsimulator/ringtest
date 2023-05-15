@@ -1,25 +1,20 @@
-name: Check with NEURON wheel
-
+name: Test ringtest using NEURON wheels
 on:
   push:
     branches: 
-      # If nothing else, this is important for the ccache logic below...
       - master
   pull_request:
     branches:
       - master
-
-
 jobs:
   ci:
-    name: ${{matrix.os}} -- ${{matrix.version}}
+    name: ${{matrix.os}} - ${{matrix.version}}
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
         os: [macOS-12, ubuntu-22.04]
         version: [neuron, neuron-nightly]
-      fail-fast: false
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -35,5 +30,9 @@ jobs:
           nrnivmodl -coreneuron mod/
       - name: Run ringtest
         run:  |
+          # Test NEURON
           python ringtest.py -tstop 100
+          diff spk1.std reference_data/spk1.100ms.std.ref
+          # Test CoreNEURON
+          python ringtest.py -coreneuron -tstop 100
           diff spk1.std reference_data/spk1.100ms.std.ref
