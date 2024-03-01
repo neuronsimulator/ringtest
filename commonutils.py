@@ -1,6 +1,7 @@
 import errno
 import os
 from neuron import h
+from pathlib import Path
 
 def mkdir_p(path):
     try:
@@ -107,14 +108,6 @@ def setup_nrnbbcore_register_mapping(rings):
     #for recording
     recordlist = []
 
-    #vector for soma sections and segment
-    somasec = h.Vector()
-    somaseg = h.Vector()
-
-    #vector for dendrite sections and segment
-    densec = h.Vector()
-    denseg = h.Vector()
-
     pc = h.ParallelContext()
 
     #all rings in the simulation
@@ -123,11 +116,13 @@ def setup_nrnbbcore_register_mapping(rings):
         #every gid in the ring
         for gid in ring.gids:
 
-            #clear previous vector if any
-            somasec.size(0)
-            somaseg.size(0)
-            densec.size(0)
-            denseg.size(0)
+            #vector for soma sections and segment
+            somasec = h.Vector()
+            somaseg = h.Vector()
+
+            #vector for dendrite sections and segment
+            densec = h.Vector()
+            denseg = h.Vector()
 
             #if gid exist on rank
             if (pc.gid_exists(gid)):
@@ -170,3 +165,45 @@ def setup_nrnbbcore_register_mapping(rings):
                 pc.nrnbbcore_register_mapping(gid, "dend", densec, denseg)
 
     return recordlist
+
+def write_report_config(output_file, report_name, target_name, report_type, report_variable,
+                        unit, report_format, target_type, dt, start_time, end_time, gids,
+                        buffer_size=8):
+    import struct
+    num_gids = len(gids)
+    report_conf = Path(output_file)
+    report_conf.parent.mkdir(parents=True, exist_ok=True)
+    with report_conf.open("wb") as fp:
+        # Write the formatted string to the file
+        fp.write(b"1\n")
+        fp.write(("%s %s %s %s %s %s %d %lf %lf %lf %d %d\n" % (
+            report_name,
+            target_name,
+            report_type,
+            report_variable,
+            unit,
+            report_format,
+            target_type,
+            dt,
+            start_time,
+            end_time,
+            num_gids,
+            buffer_size
+        )).encode())
+        # Write the array of integers to the file in binary format
+        fp.write(struct.pack(f'{num_gids}i', *gids))
+        fp.write(b'\n')
+        fp.write(b"1\n")
+        fp.write(b"default 0\n")
+        fp.write(b"spikes.h5\n")
+
+def write_sim_config(output_file, coredata_dir, report_conf, tstop):
+    sim_conf = Path(output_file)
+    sim_conf.parent.mkdir(parents=True, exist_ok=True)
+    os.makedirs(coredata_dir, exist_ok=True)
+    with sim_conf.open("w") as fp:
+        fp.write(f"outpath=./\n")
+        fp.write(f"datpath=./{coredata_dir}\n")
+        fp.write(f"tstop={tstop}\n")
+        fp.write(f"report-conf='{report_conf}'\n")
+        fp.write("mpi=true\n")
