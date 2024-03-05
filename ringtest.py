@@ -166,7 +166,7 @@ if __name__ == '__main__':
             sim_conf_file = "sim.conf"
             if settings.rank == 0:
                 write_report_config(report_conf_file, "soma.h5", "Mosaic", "compartment", "v",
-                                    "mV", "SONATA", 2, 0.1, 0, tstop, list(range(ncell)))
+                                    "mV", "SONATA", 2, 1, 0, tstop, list(range(ncell)))
                 write_sim_config(sim_conf_file, "corenrn_data", report_conf_file, tstop)
             coreneuron.sim_config=sim_conf_file
 
