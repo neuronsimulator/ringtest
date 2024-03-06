@@ -121,7 +121,7 @@ def prun(tstop):
     return runtime, load_balance, avg_comp_time, spk_time, gap_time
 
 
-if __name__ == '__main__':
+def create_rings():
 
     ## Create all rings ##
 
@@ -194,15 +194,13 @@ if __name__ == '__main__':
     if args.dumpmodel:
         pc.nrnbbcore_write("coredat")
 
+    return types, rings
 
+def runsim():
     ##  Run simulation ##
 
     runtime, load_balance, avg_comp_time, spk_time, gap_time = prun(tstop)
     timeit("run", settings.rank)
-
-    ## Write spike raster ##
-
-    spikeout(".")
 
     ## Print stats ##
 
@@ -212,5 +210,16 @@ if __name__ == '__main__':
               (runtime, load_balance * 100, avg_comp_time))
         print("spk_time max=%g min=%g" % (spk_time[0], spk_time[1]))
         print("gap_time max=%g min=%g" % (gap_time[0], gap_time[1]))
+
+
+if __name__ == '__main__':
+
+    model = create_rings()
+
+    ## Run Simulation ##
+    runsim()
+
+    ## Write spike raster ##
+    spikeout(".")
 
     h.quit()
