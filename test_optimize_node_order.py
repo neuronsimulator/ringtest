@@ -24,3 +24,4 @@ def tst_optimize_node_order():
 
 if __name__ == "__main__":
     tst_optimize_node_order()
+    quit()
