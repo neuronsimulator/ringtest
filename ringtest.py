@@ -160,7 +160,7 @@ if __name__ == '__main__':
             print("Error: multi-split is not supported with CoreNEURON\n")
             quit()
 
-        if args.report_mapping:
+        if args.register_mapping:
             setup_nrnbbcore_register_mapping(rings)
             report_conf_file = "report.conf"
             sim_conf_file = "sim.conf"

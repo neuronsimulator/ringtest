@@ -89,8 +89,8 @@ parser.add_argument("-nt", metavar='N', help="nthread", type=int, default=1)
 parser.add_argument("-multisplit", action='store_true', default=False,
                    help="intra-rank thread balance. All pieces of cell on same rank.")
 
-parser.add_argument("-reportmapping",
-                    dest='report_mapping',
+parser.add_argument("-registermapping",
+                    dest='register_mapping',
                     action='store_true',
-                    help="report mapping",
+                    help="write section-segment mapping to gid_3.dat file, used for BBP reporting",
                     default=False)
