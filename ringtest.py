@@ -160,6 +160,17 @@ if __name__ == '__main__':
             print("Error: multi-split is not supported with CoreNEURON\n")
             quit()
 
+        if args.register_mapping:
+            setup_nrnbbcore_register_mapping(rings)
+            report_conf_file = "report.conf"
+            sim_conf_file = "sim.conf"
+            if settings.rank == 0:
+                write_report_config(report_conf_file, "soma.h5", "Mosaic", "compartment", "v",
+                                    "mV", "SONATA", 2, 1, 0, tstop, list(range(ncell)))
+                write_spike_config(report_conf_file, "spikes.h5", ["default"], [0])
+                write_sim_config(sim_conf_file, "corenrn_data", report_conf_file, tstop)
+            coreneuron.sim_config=sim_conf_file
+
     ## Record spikes ##
 
     spike_record()
