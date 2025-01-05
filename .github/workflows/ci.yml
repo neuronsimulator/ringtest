@@ -30,10 +30,18 @@ jobs:
           nrnivmodl -coreneuron mod/
       - name: Run ringtest
         run:  |
+          # Get NEURON major version
+          NRNVER=$(python -c 'import neuron; print(neuron.__version__.split(".")[0])')
+          echo "NEURON major version: ${NRNVER}"
+
           # Test NEURON
           python ringtest.py -tstop 100
           diff spk1.std reference_data/spk1.100ms.std.ref
+
           # Test CoreNEURON
           python ringtest.py -coreneuron -tstop 100
           sortspike spk1.std spk1.coreneuron.std
-          diff spk1.coreneuron.std reference_data/spk1.100ms.std.ref
+          if [ "$NRNVER" -ge 9 ]; then
+            # 8.2 coreneuron mod files comment out TABLE statements
+            diff spk1.coreneuron.std reference_data/spk1.100ms.std.ref
+          fi
