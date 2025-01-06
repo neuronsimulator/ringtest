@@ -28,7 +28,7 @@ tstop = args.tstop
 method = args.method
 
 # Cvode threshold detection --- first or second order
-condition_order = 2 if args.thresh_order2 is True else 1
+condition_order = 2 if args.thresh_order2 else 1
 
 # whether to randomize cell parameters
 randomize_parameters = args.rparm
@@ -207,7 +207,7 @@ def create_rings():
     if method > 0:
         h.cvode.condition_order(condition_order)
         h.cvode.active(1)
-        if (method == 2):
+        if method == 2:
             h.cvode.use_local_dt(1)
     pc.set_maxstep(10)
     h.stdinit()
