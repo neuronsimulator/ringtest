@@ -42,6 +42,19 @@ parser.add_argument("-tstop",
                     type=float,
                     default=100.)
 
+parser.add_argument("-method",
+                    dest='method',
+                    metavar='N',
+                    help="0-fixed, 1-global cvode, 2-local cvode",
+                    type=int,
+                    default=0)
+
+parser.add_argument("-2nd_order_thresh",
+                   dest='thresh_order2',
+                   action='store_true',
+                   help="2nd order correct threshold detection (cvode only)",
+                   default=False)
+
 parser.add_argument("-gran",
                     metavar='N',
                     help="global Random123 index (default 0)",

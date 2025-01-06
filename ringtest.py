@@ -24,6 +24,12 @@ usegap = args.gap
 # stop time of simulation
 tstop = args.tstop
 
+# Which integration method to use
+method = args.method
+
+# Cvode threshold detection --- first or second order
+condition_order = 2 if args.thresh_order2 else 1
+
 # whether to randomize cell parameters
 randomize_parameters = args.rparm
 
@@ -76,6 +82,9 @@ if settings.rank == 0:
     print ("%s %s" % (str(nbranch), str(ncompart)))
     print ("nring=%d\ncell per ring=%d\nncell_per_type=%d" % (nring, ncell, ncell_per_type))
     print ("ntype=%d" % ntype)
+    methname=["fixed", "global vardt, ", "local vardt, "]
+    co = "condition_order="+str(condition_order) if method else ""
+    print ("method = %s %s" % (methname[method], co))
 
 #from cell import BallStick
 h.load_file("cell.hoc")
@@ -195,6 +204,11 @@ def create_rings():
 
     ## Initialize ##
 
+    if method > 0:
+        h.cvode.condition_order(condition_order)
+        h.cvode.active(1)
+        if method == 2:
+            h.cvode.use_local_dt(1)
     pc.set_maxstep(10)
     h.stdinit()
     timeit("initialized", settings.rank)
