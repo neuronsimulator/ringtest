@@ -18,10 +18,19 @@ zfor_ok=$?
 grep -q "#define NRN_TRACE 1" $arch/$mfile
 trace_ok=$?
 
+# sed -i slightly different between linux and darwin
+if [[ $(uname -s) == "Darwin" ]]; then
+  SEDI='sed -i ""'
+else
+  SEDI='sed -i'
+fi
+  
+echo "SEDI |$SEDI|"
+
 if [[ "$zfor_ok" == "1" || "$trace_ok" == "1" ]]; then
   echo "need to update $arch/$mfile"
-  sed -i "s/#define SPLITFOR ./#define SPLITFOR $zfor/" $arch/$mfile
-  sed -i "s/#define NRN_TRACE ./#define NRN_TRACE 1/" $arch/$mfile
+  $SEDI "s/#define SPLITFOR ./#define SPLITFOR $zfor/" $arch/$mfile
+  $SEDI "s/#define NRN_TRACE ./#define NRN_TRACE 1/" $arch/$mfile
   nrnivmodl mod
 fi
 
