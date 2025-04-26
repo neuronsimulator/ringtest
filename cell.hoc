@@ -63,6 +63,7 @@ proc biophys() {
       g_pas = 0.001
       e_pas = -65
     insert hh2
+//    insert hh3
   }
 }
 proc biophys_inhomo(){}

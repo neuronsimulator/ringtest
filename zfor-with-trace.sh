@@ -8,10 +8,11 @@ fi
 nrn_trace=1
 
 mfile="hh2.cpp"
+mfiles="$mfile"
 arch="$(uname -m)"
 
 # Decide whether SPLITFOR or NRN_TRACE need changing in hh2.cpp.
-# if so change and run nrnivmodl
+# if so change all the mfiles and run nrnivmodl
 
 grep -q "#define SPLITFOR $zfor" $arch/$mfile
 zfor_ok=$?
@@ -28,9 +29,11 @@ fi
 echo "SEDI |$SEDI|"
 
 if [[ "$zfor_ok" == "1" || "$trace_ok" == "1" ]]; then
-  echo "need to update $arch/$mfile"
-  $SEDI "s/#define SPLITFOR ./#define SPLITFOR $zfor/" $arch/$mfile
-  $SEDI "s/#define NRN_TRACE ./#define NRN_TRACE 1/" $arch/$mfile
+  for mf in $mfiles ; do
+    echo "need to update $arch/$mf"
+    $SEDI "s/#define SPLITFOR ./#define SPLITFOR $zfor/" $arch/$mf
+    $SEDI "s/#define NRN_TRACE ./#define NRN_TRACE 1/" $arch/$mf
+  done
   nrnivmodl mod
 fi
 
