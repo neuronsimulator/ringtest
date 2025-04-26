@@ -1,0 +1,6 @@
+probe process("/home/hines/neuron/ringtest/x86_64/libnrnmech.so").provider("nrn").mark("trace_start") {
+    printf("Start %s at %d\n", user_string($arg1), gettimeofday_ns());
+}
+probe process("/home/hines/neuron/ringtest/x86_64/libnrnmech.so").provider("nrn").mark("trace_end") {
+    printf("End %s at %d\n", user_string($arg1), gettimeofday_ns());
+}

@@ -58,18 +58,11 @@ proc biophys() {
     Ra = 100
     cm = 1
   }
-  soma {
-    insert hh
-      gnabar_hh = 0.12
-      gkbar_hh = 0.036
-      gl_hh = 0.0003
-      el_hh = -54.3
-  }
-  forsec den {
+  forsec all {
     insert pas
       g_pas = 0.001
       e_pas = -65
-    insert hh
+    insert hh2
   }
 }
 proc biophys_inhomo(){}
