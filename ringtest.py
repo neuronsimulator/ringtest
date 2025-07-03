@@ -157,6 +157,7 @@ def create_rings():
     ## CoreNEURON setting ##
 
     h.cvode.cache_efficient(1)
+    h.cvode.use_fast_imem(1)
 
     if use_coreneuron:
         from neuron import coreneuron
@@ -174,8 +175,10 @@ def create_rings():
             report_conf_file = "report.conf"
             sim_conf_file = "sim.conf"
             if settings.rank == 0:
-                write_report_config(report_conf_file, "soma.h5", "Mosaic", "compartment", "v",
+                write_report_config(report_conf_file, "soma_v.h5", "Mosaic", "compartment", "v",
                                     "mV", "SONATA", 2, 1, 0, tstop, list(range(ncell)))
+                write_report_config(report_conf_file, "soma_i_membrane.h5", "Mosaic", "compartment", "v",
+                                    "nA", "SONATA", 2, 1, 0, tstop, list(range(ncell)))
                 write_spike_config(report_conf_file, "spikes.h5", ["default"], [0])
                 write_sim_config(sim_conf_file, "corenrn_data", report_conf_file, tstop)
             coreneuron.sim_config=sim_conf_file

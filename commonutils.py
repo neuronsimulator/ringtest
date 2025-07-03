@@ -102,7 +102,6 @@ def timeit(message, rank):
             print ('%gs %s' % ((x - _timeit), message))
         _timeit = x
 
-
 # function to register section-segment mapping with bbcore write
 def setup_nrnbbcore_register_mapping(rings):
 
@@ -144,6 +143,11 @@ def setup_nrnbbcore_register_mapping(rings):
                         v.record(seg._ref_v)
                         v.label("soma %d %d" % (isec, seg.node_index()))
                         recordlist.append(v)
+
+                        i_membrane = h.Vector()
+                        i_membrane.record(seg._ref_i_membrane_)
+                        i_membrane.label("soma i_membrane %d %d" % (isec, seg.node_index()))
+                        recordlist.append(i_membrane)
                 isec += 1
 
                 #for sections in dendrite
@@ -157,6 +161,11 @@ def setup_nrnbbcore_register_mapping(rings):
                         v.record(seg._ref_v)
                         v.label("dend %d %d" % (isec, seg.node_index()))
                         recordlist.append(v)
+
+                        i_membrane = h.Vector()
+                        i_membrane.record(seg._ref_i_membrane_)
+                        i_membrane.label("dend i_membrane %d %d" % (isec, seg.node_index()))
+                        recordlist.append(i_membrane)
                     isec += 1
 
                 #register soma section list
