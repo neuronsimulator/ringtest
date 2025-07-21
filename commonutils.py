@@ -169,7 +169,7 @@ def setup_nrnbbcore_register_mapping(rings):
 
 def write_report_config(output_file, report_name, target_name, report_type, report_variable,
                         unit, report_format, target_type, dt, start_time, end_time, gids,
-                        buffer_size=8):
+                        buffer_size=8, scaling="Area"):
     import struct
     num_gids = len(gids)
     report_conf = Path(output_file)
@@ -177,7 +177,7 @@ def write_report_config(output_file, report_name, target_name, report_type, repo
     with report_conf.open("wb") as fp:
         # Write the formatted string to the file
         fp.write(b"1\n")
-        fp.write(("%s %s %s %s %s %s %d %lf %lf %lf %d %d\n" % (
+        fp.write(("%s %s %s %s %s %s %d %lf %lf %lf %d %d %s\n" % (
             report_name,
             target_name,
             report_type,
@@ -189,7 +189,8 @@ def write_report_config(output_file, report_name, target_name, report_type, repo
             start_time,
             end_time,
             num_gids,
-            buffer_size
+            buffer_size,
+            scaling
         )).encode())
         # Write the array of integers to the file in binary format
         fp.write(struct.pack(f'{num_gids}i', *gids))
