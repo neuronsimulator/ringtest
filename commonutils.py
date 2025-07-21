@@ -2,7 +2,7 @@ import errno
 import os
 from neuron import h
 from pathlib import Path
-from typing import Literal
+from typing import List, Literal
 
 def mkdir_p(path):
     try:
