@@ -2,7 +2,7 @@ import errno
 import os
 from neuron import h
 from pathlib import Path
-from typing import List
+from typing import Literal
 
 def mkdir_p(path):
     try:
@@ -169,7 +169,12 @@ def setup_nrnbbcore_register_mapping(rings):
 
 def write_report_config(output_file, report_name, target_name, report_type, report_variable,
                         unit, report_format, target_type, dt, start_time, end_time, gids,
-                        buffer_size=8, scaling="Area"):
+                        buffer_size=8, scaling: Literal["none", "area"] = "area"):
+    """
+    Writes the configuration for a report to a file. Check the docs here:
+    
+    https://sonata-extension.readthedocs.io/en/latest/sonata_simulation.html#reports
+    """
     import struct
     num_gids = len(gids)
     report_conf = Path(output_file)
