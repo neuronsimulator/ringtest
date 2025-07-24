@@ -168,7 +168,7 @@ def setup_nrnbbcore_register_mapping(rings):
     return recordlist
 
 def write_report_config(output_file, report_name, target_name, report_type, report_variable,
-                        unit, report_format, target_type, dt, start_time, end_time, gids,
+                        unit, report_format, sections, compartments, dt, start_time, end_time, gids,
                         buffer_size=8, scaling: Literal["none", "area"] = "area"):
     """
     Writes the configuration for a report to a file. Check the docs here:
@@ -189,7 +189,8 @@ def write_report_config(output_file, report_name, target_name, report_type, repo
             report_variable,
             unit,
             report_format,
-            target_type,
+            sections,
+            compartments,
             dt,
             start_time,
             end_time,
