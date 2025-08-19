@@ -175,7 +175,7 @@ def create_rings():
             sim_conf_file = "sim.conf"
             if settings.rank == 0:
                 write_report_config(report_conf_file, "soma.h5", "Mosaic", "compartment", "v",
-                                    "mV", "SONATA", 2, 1, 0, tstop, list(range(ncell)))
+                                    "mV", "SONATA", "soma", "center", 1, 0, tstop, list(range(ncell)))
                 write_spike_config(report_conf_file, "spikes.h5", ["default"], [0])
                 write_sim_config(sim_conf_file, "corenrn_data", report_conf_file, tstop)
             coreneuron.sim_config=sim_conf_file
