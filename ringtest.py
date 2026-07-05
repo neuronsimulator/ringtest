@@ -24,6 +24,9 @@ usegap = args.gap
 # stop time of simulation
 tstop = args.tstop
 
+# prcellstate gid at tstop to write
+prcellstate_gid = args.prcellstate_gid
+
 # Which integration method to use
 method = args.method
 
@@ -221,11 +224,20 @@ def create_rings():
 
     return types, rings
 
+def prcs(gid):
+    if gid >= 0 and pc.gid_exists(gid):
+        suffix = "-cn" if use_coreneuron else ""
+        suffix += "-gpu" if coreneuron_gpu or use_native_gpu else ""
+        suffix += "-t%g" % (h.t,)
+        pc.prcellstate(gid, suffix)
+
 def runsim():
     ##  Run simulation ##
 
     runtime, load_balance, avg_comp_time, spk_time, gap_time = prun(tstop)
     timeit("run", settings.rank)
+
+    prcs(prcellstate_gid)
 
     ## Print stats ##
 

@@ -91,6 +91,12 @@ parser.add_argument('-permute',
                     type=int,
                     default=0)
 
+parser.add_argument('-prcellstate_gid',
+                    metavar='N',
+                    help="prcellstate file written when non-negative gid (default -1)",
+                    type=int,
+                    default=-1)
+
 parser.add_argument("-show", action='store_true', help="show type topologies", default=False)
 
 parser.add_argument("-gap", action='store_true', help="use gap junctions", default=False)
